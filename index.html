@@ -248,39 +248,36 @@ const STATION = {
         return;
       }
       
-      // Verificar que tenga organization_id
-      if (!employee.organization_id) {
-        this.showError(errorDiv, 'Empleado sin organización asignada');
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Continuar →';
-        }
-        return;
-      }
-      
-      // Obtener la organización por separado
-      const { data: organization, error: orgError } = await this.supabase
-        .from('organizations')
-        .select('id, codigo_organizacion, nombre, slug, access_url')
-        .eq('id', employee.organization_id)
-        .single();
-      
-      if (orgError || !organization) {
-        console.error('❌ Organización no encontrada');
-        this.showError(errorDiv, 'Error: organización no encontrada');
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Continuar →';
-        }
-        return;
-      }
-      
       console.log('✅ Empleado encontrado:', employee);
-      console.log('✅ Organización encontrada:', organization);
       
-      // Guardar datos
+      // Guardar datos del empleado
       this.employeeData = employee;
-      this.organizationData = organization;
+      
+      // Si NO tiene organization_id → es SuperAdmin → obtener todas las orgs
+      if (!employee.organization_id) {
+        console.log('🔑 SuperAdmin detectado - cargará selector de organizaciones');
+        this.organizationData = null; // SuperAdmin no tiene org específica
+      } else {
+        // Obtener la organización específica
+        const { data: organization, error: orgError } = await this.supabase
+          .from('organizations')
+          .select('id, codigo_organizacion, nombre, slug, access_url')
+          .eq('id', employee.organization_id)
+          .single();
+        
+        if (orgError || !organization) {
+          console.error('❌ Organización no encontrada');
+          this.showError(errorDiv, 'Error: organización no encontrada');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Continuar →';
+          }
+          return;
+        }
+        
+        console.log('✅ Organización encontrada:', organization);
+        this.organizationData = organization;
+      }
       
       // Ir a pantalla de PIN
       this.goToPinScreen();
@@ -384,45 +381,32 @@ const STATION = {
     
     console.log('✅ PIN correcto');
     
-    // Registrar el clocking (acceso)
-    await this.registerClocking();
-    
-    // Redirigir a la organización
+    // Redirigir directamente (sin registrar clocking)
     this.redirectToOrganization();
   },
   
   // ══════════════════════════════════════════════════════════
-  //  REGISTRAR CLOCKING (ENTRADA AL SISTEMA)
-  // ══════════════════════════════════════════════════════════
-  async registerClocking() {
-    try {
-      const { error } = await this.supabase
-        .from('employee_clocking')
-        .insert({
-          codigo_empleado: this.employeeData.codigo_empleado,
-          organization_id: this.employeeData.organization_id,
-          pin_desbloqueo: this.employeeData.pin_desbloqueo,
-          dated_at: new Date().toISOString()
-        });
-      
-      if (error) {
-        console.warn('⚠️ No se pudo registrar clocking:', error);
-      } else {
-        console.log('✅ Clocking registrado');
-      }
-    } catch (err) {
-      console.warn('⚠️ Error al registrar clocking:', err);
-    }
-  },
-  
-  // ══════════════════════════════════════════════════════════
-  //  REDIRECCIÓN A LA ORGANIZACIÓN
+  //  REDIRECCIÓN SEGÚN TIPO DE USUARIO
   // ══════════════════════════════════════════════════════════
   redirectToOrganization() {
     const overlay = document.getElementById('loading-overlay');
     const text = document.getElementById('loading-text');
     
     overlay.classList.add('visible');
+    
+    // SuperAdmin (sin organization_id) → Panel de control
+    if (!this.organizationData) {
+      text.textContent = 'Acceso SuperAdmin - Redirigiendo a Control...';
+      
+      setTimeout(() => {
+        const url = 'https://control.inout-media.es'; // URL del panel SuperAdmin
+        console.log('🔄 SuperAdmin redirect to:', url);
+        window.location.href = url;
+      }, 1000);
+      return;
+    }
+    
+    // Admin/Manager de organización → URL específica de la org
     text.textContent = `Redirigiendo a ${this.organizationData.nombre}...`;
     
     setTimeout(() => {
