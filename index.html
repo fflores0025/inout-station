@@ -218,23 +218,14 @@ const STATION = {
     }
     
     try {
-      // Buscar en la tabla empleados
-      const { data: employee, error } = await this.supabase
+      // Buscar en la tabla empleados (sin embedded join para evitar ambigüedad)
+      const { data: employee, error: empError } = await this.supabase
         .from('empleados')
-        .select(`
-          *,
-          organizations!inner(
-            id,
-            codigo_organizacion,
-            nombre,
-            slug,
-            access_url
-          )
-        `)
+        .select('*')
         .eq('codigo_empleado', code)
         .maybeSingle();
       
-      if (error) throw error;
+      if (empError) throw empError;
       
       if (!employee) {
         console.error('❌ Código no encontrado');
@@ -257,11 +248,39 @@ const STATION = {
         return;
       }
       
+      // Verificar que tenga organization_id
+      if (!employee.organization_id) {
+        this.showError(errorDiv, 'Empleado sin organización asignada');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Continuar →';
+        }
+        return;
+      }
+      
+      // Obtener la organización por separado
+      const { data: organization, error: orgError } = await this.supabase
+        .from('organizations')
+        .select('id, codigo_organizacion, nombre, slug, access_url')
+        .eq('id', employee.organization_id)
+        .single();
+      
+      if (orgError || !organization) {
+        console.error('❌ Organización no encontrada');
+        this.showError(errorDiv, 'Error: organización no encontrada');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Continuar →';
+        }
+        return;
+      }
+      
       console.log('✅ Empleado encontrado:', employee);
+      console.log('✅ Organización encontrada:', organization);
       
       // Guardar datos
       this.employeeData = employee;
-      this.organizationData = employee.organizations;
+      this.organizationData = organization;
       
       // Ir a pantalla de PIN
       this.goToPinScreen();
