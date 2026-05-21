@@ -9,11 +9,10 @@
   <title>InOut Station</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   
   <style>
     /* ═══════════════════════════════════════════════════════════
-       ESTILOS GLOBALES Y SELECTOR STATION
+       ESTILOS GLOBALES
     ═══════════════════════════════════════════════════════════ */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
     :root{
@@ -25,222 +24,113 @@
     }
     html,body{height:100%;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--txt);background:var(--bg);overflow:hidden;touch-action:manipulation;user-select:none;-webkit-font-smoothing:antialiased;}
     
-    .screen{position:fixed;inset:0;display:none;z-index:10;}
-    .screen.active{display:block;}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;}
     
-    #selector-screen{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;}
+    .screen{display:none;width:100%;max-width:450px;}
+    .screen.active{display:flex;flex-direction:column;align-items:center;}
+    
     .station-logo{text-align:center;margin-bottom:48px;}
     .station-logo .brand{font-family:'Syne',sans-serif;font-weight:800;font-size:42px;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
     .station-logo .sub{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:2.5px;margin-top:10px;}
-    .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:720px;}
-    .mode-card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:48px 28px;cursor:pointer;transition:all 0.3s ease;display:flex;flex-direction:column;align-items:center;gap:20px;min-height:300px;}
-    .mode-card:hover{border-color:var(--a1);background:rgba(200,255,0,0.05);transform:translateY(-10px);box-shadow:0 16px 48px rgba(200,255,0,0.18);}
-    .mode-emoji{font-size:80px;line-height:1;}
-    .mode-title{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;}
-    .mode-desc{font-size:15px;color:var(--muted);text-align:center;line-height:1.7;}
     
-    .exit-btn{position:fixed;top:20px;right:20px;z-index:9999;width:52px;height:52px;border-radius:50%;background:rgba(17,17,32,0.98);border:2px solid var(--border);color:var(--muted);font-size:24px;cursor:pointer;display:none;align-items:center;justify-content:center;transition:all 0.25s;backdrop-filter:blur(10px);box-shadow:0 6px 24px rgba(0,0,0,0.7);}
-    .screen.active .exit-btn{display:flex;}
-    .exit-btn:hover{background:rgba(255,23,68,0.2);border-color:rgba(255,23,68,0.6);color:#ff1744;transform:scale(1.1);}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px;width:100%;}
+    .card-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px;text-align:center;}
+    .card-subtitle{font-size:14px;color:var(--muted);margin-bottom:24px;text-align:center;}
     
-    #global-pin-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.96);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:24px;}
-    #global-pin-overlay.visible{display:flex;}
-    .pin-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:36px;width:100%;max-width:380px;text-align:center;}
-    .pin-title{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;margin-bottom:10px;}
-    .pin-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
-    .pin-dots{display:flex;gap:16px;justify-content:center;margin-bottom:32px;}
+    .form-input{width:100%;padding:16px;border-radius:var(--r-sm);background:var(--surf);border:2px solid var(--border);color:var(--txt);font-size:18px;text-align:center;font-family:monospace;letter-spacing:2px;outline:none;transition:border-color .15s;-webkit-text-fill-color:var(--txt);margin-bottom:16px;}
+    .form-input:focus{border-color:var(--a3);}
+    .form-input.error{border-color:var(--danger);}
+    
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:16px 24px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;transition:all 0.2s;width:100%;min-height:52px;}
+    .btn:hover:not(:disabled){opacity:0.9;transform:translateY(-1px);}
+    .btn:active:not(:disabled){transform:translateY(0);}
+    .btn:disabled{opacity:0.4;pointer-events:none;}
+    .btn-p{background:var(--a1);color:#000;}
+    .btn-g{background:transparent;color:var(--muted);border:1px solid var(--border);}
+    
+    .error-msg{margin-top:12px;padding:12px;border-radius:var(--r-sm);background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.3);color:var(--danger);font-size:13px;text-align:center;display:none;}
+    .error-msg.visible{display:block;}
+    
+    /* PIN Pad */
+    .pin-dots{display:flex;gap:16px;justify-content:center;margin:24px 0 32px;}
     .pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:all 0.2s;}
     .pin-dot.filled{background:var(--a1);border-color:var(--a1);}
     .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-    .pin-key{padding:22px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:var(--txt);cursor:pointer;transition:all 0.15s;user-select:none;}
+    .pin-key{padding:22px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:var(--txt);cursor:pointer;transition:all 0.15s;user-select:none;text-align:center;}
     .pin-key:active{background:rgba(200,255,0,0.12);transform:scale(0.94);}
     .pin-key.empty{opacity:0.1;pointer-events:none;}
-    .pin-cancel{margin-top:18px;padding:14px;border-radius:var(--r-sm);background:transparent;border:1px solid var(--border);color:var(--muted);font-size:15px;cursor:pointer;width:100%;}
+    
+    /* Loading spinner */
+    .loading-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+    .loading-overlay.visible{display:flex;}
+    .spinner{width:50px;height:50px;border:4px solid var(--border);border-top-color:var(--a1);border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .loading-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--a1);}
     
     @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-12px);}75%{transform:translateX(12px);}}
-    @media(max-width:680px){.mode-grid{grid-template-columns:1fr;gap:18px;}.mode-card{min-height:240px;padding:36px 24px;}.mode-emoji{font-size:64px;}}
-
-    /* ═══════════════════════════════════════════════════════════
-       ESTILOS DE KIOSK (del documento original)
-    ═══════════════════════════════════════════════════════════ */
-    .kiosk{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:580px;margin:0 auto;padding:14px 20px;position:relative;}
-    .kiosk::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:400px;height:300px;background:radial-gradient(ellipse,rgba(200,255,0,.055) 0%,transparent 70%);pointer-events:none;z-index:0;}
-    .k-header{text-align:center;padding:10px 0 8px;flex-shrink:0;position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;}
-    .k-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.5px;flex:1;text-align:center;}
-    .k-logo .hi{color:var(--a1);}
-    .k-logo small{display:block;font-family:'DM Sans',sans-serif;font-weight:400;font-size:10px;color:var(--a3);text-transform:uppercase;letter-spacing:2.5px;margin-top:2px;}
-    .k-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-y:auto;padding:6px 0 14px;position:relative;z-index:1;}
-    .k-body::-webkit-scrollbar{width:3px;}
-    .k-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-    .k-footer{text-align:center;padding:6px 0;flex-shrink:0;font-size:10px;color:var(--muted);position:relative;z-index:1;letter-spacing:.3px;}
-    .nfc-ring{width:170px;height:170px;border-radius:50%;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .35s;margin:0 auto;position:relative;}
-    .nfc-ring::before,.nfc-ring::after{content:'';position:absolute;border-radius:50%;border:1.5px solid currentColor;opacity:0;}
-    .nfc-ring::before{width:200px;height:200px;}
-    .nfc-ring::after{width:230px;height:230px;}
-    .nfc-ring.scanning{border-color:var(--a3);color:var(--a3);animation:ring-pulse 2.2s ease-in-out infinite;}
-    .nfc-ring.scanning::before,.nfc-ring.scanning::after{animation:ring-expand 2.2s ease-in-out infinite;}
-    .nfc-ring.scanning::after{animation-delay:.55s;}
-    .nfc-ring.found{border-color:var(--a1);color:var(--a1);animation:none;}
-    .nfc-ring.found::before,.nfc-ring.found::after{display:none;}
-    .nfc-ring.err-ring{border-color:var(--danger);color:var(--danger);animation:none;}
-    @keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,.25);}50%{box-shadow:0 0 0 18px rgba(0,212,255,0);}}
-    @keyframes ring-expand{0%{opacity:.35;transform:scale(.85);}100%{opacity:0;transform:scale(1.12);}}
-    .nfc-emoji{font-size:60px;line-height:1;display:block;text-align:center;}
-    .k-title{font-family:'Syne',sans-serif;font-weight:700;font-size:21px;text-align:center;margin-top:18px;line-height:1.2;}
-    .k-sub{color:var(--muted);font-size:14px;text-align:center;margin-top:6px;line-height:1.5;}
-    .bal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;text-align:center;}
-    .bal-name{font-size:16px;font-weight:500;margin-bottom:3px;}
-    .bal-uid{font-size:11px;color:var(--muted);font-family:monospace;letter-spacing:.5px;}
-    .bal-amount{font-family:'Syne',sans-serif;font-size:50px;font-weight:800;color:var(--a1);margin:10px 0 4px;letter-spacing:-1.5px;line-height:1;}
-    .bal-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
-    .topup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:100%;margin-top:14px;}
-    .topup-btn{padding:18px 6px;border-radius:var(--r-sm);background:var(--card);border:2px solid var(--border);text-align:center;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;}
-    .topup-btn:active{transform:scale(.94);}
-    .topup-btn.selected{border-color:var(--a1);background:rgba(200,255,0,.07);box-shadow:0 0 0 3px rgba(200,255,0,.12);}
-    .topup-btn .t-amount{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--a1);}
-    .topup-btn .t-fee{font-size:10px;color:var(--muted);margin-top:3px;}
-    .custom-input{width:100%;padding:14px 16px;border-radius:var(--r-sm);background:var(--surf);border:2px solid var(--border);color:var(--txt);font-size:22px;font-family:'Syne',sans-serif;font-weight:700;text-align:center;outline:none;transition:border-color .15s;-webkit-text-fill-color:var(--txt);margin-top:10px;}
-    .custom-input:focus{border-color:var(--a3);}
-    .custom-input.has-value{border-color:var(--a1);}
-    .custom-input::placeholder{color:var(--muted);font-weight:400;font-size:16px;}
-    .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 24px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;transition:opacity .12s,transform .1s;width:100%;min-height:52px;}
-    .btn:active{transform:scale(.96);opacity:.8;}
-    .btn:disabled{opacity:.4;pointer-events:none;}
-    .btn-p{background:var(--a1);color:#000;}
-    .btn-g{background:transparent;color:var(--muted);border:1px solid var(--border);}
-    .btn-danger{background:rgba(255,23,68,.1);color:var(--danger);border:1px solid rgba(255,23,68,.2);}
-    .btn-sup{background:rgba(0,212,255,.08);color:var(--a3);border:1px solid rgba(0,212,255,.2);}
-    .summary{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;width:100%;margin-top:12px;}
-    .sum-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:14px;color:var(--muted);}
-    .sum-row .val{color:var(--txt);}
-    .sum-row.total{border-top:1px solid var(--border);padding-top:13px;margin-top:4px;font-size:15px;font-weight:600;color:var(--txt);}
-    .sum-row.total .val{color:var(--a1);font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
-    .proc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:26px 20px;width:100%;text-align:center;}
-    .proc-status{padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin:12px 0;font-size:13px;color:var(--warn);line-height:1.5;}
-    .offline-badge{display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(255,171,0,.15);border:1px solid rgba(255,171,0,.4);color:var(--warn);border-radius:100px;padding:6px 16px;font-size:12px;z-index:200;white-space:nowrap;}
-    .offline-badge.visible{display:block;}
-    .tx-list{width:100%;display:flex;flex-direction:column;gap:7px;margin-top:10px;}
-    .tx-item{display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);}
-    .tx-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
-    .tx-icon.in{background:rgba(200,255,0,.08);}
-    .tx-icon.out{background:rgba(255,60,172,.08);}
-    .tx-info{flex:1;min-width:0;}
-    .tx-concept{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .tx-date{font-size:11px;color:var(--muted);margin-top:1px;}
-    .tx-amount{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;flex-shrink:0;}
-    .tx-amount.in{color:var(--a1);}
-    .tx-amount.out{color:var(--a2);}
-    .sup-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:12px;}
-    .sup-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;text-align:center;}
-    .sup-stat .s-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--a1);}
-    .sup-stat .s-label{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:1px;}
-    .sup-stat.wide{grid-column:1/-1;}
-    .sup-stat.wide .s-val{font-size:36px;}
-    .success-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,40,10,.93);backdrop-filter:blur(6px);animation:fadeIn .25s ease;padding:24px;}
-    .success-box{text-align:center;width:100%;max-width:360px;}
-    .success-emoji{font-size:72px;display:block;margin-bottom:14px;}
-    .success-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--success);}
-    .success-new{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--a1);margin-top:12px;}
-    .success-sub{font-size:15px;color:var(--muted);margin-top:6px;}
-    .qr-wrap{margin:16px auto 0;width:160px;height:160px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px;}
-    .qr-wrap canvas{width:100%!important;height:100%!important;}
-    .success-count{font-size:13px;color:var(--muted);margin-top:16px;}
-    .oos-screen{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);text-align:center;padding:40px;gap:16px;}
-    .oos-emoji{font-size:80px;}
-    .oos-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--a2);}
-    .oos-msg{font-size:16px;color:var(--muted);max-width:340px;line-height:1.6;}
-    .lang-row{display:flex;gap:6px;}
-    .lang-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
-    .lang-btn.active{border-color:var(--a1);color:var(--a1);background:rgba(200,255,0,.08);}
-    #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border);border-radius:100px;padding:12px 22px;font-size:13px;z-index:1000;transition:transform .3s cubic-bezier(.4,0,.2,1);white-space:nowrap;pointer-events:none;}
-    #toast.show{transform:translateX(-50%) translateY(0);}
-    #toast.warn{border-color:rgba(255,171,0,.4);color:var(--warn);}
-    #toast.err{border-color:rgba(255,23,68,.4);color:var(--danger);}
-    #toast.ok{border-color:rgba(0,230,118,.4);color:var(--success);}
-    .k-status{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:5px 16px 7px;font-size:10px;color:var(--muted);background:linear-gradient(to top,var(--bg) 60%,transparent);z-index:10;pointer-events:none;}
-    .k-status .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--a1);margin-right:5px;animation:blink 2s ease-in-out infinite;}
-    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
-    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-    .pin-overlay{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;}
-    .spin{display:inline-block;width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--a3);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    @media(max-height:680px){.nfc-ring{width:130px;height:130px;}.nfc-ring::before{width:154px;height:154px;}.nfc-ring::after{width:178px;height:178px;}.nfc-emoji{font-size:46px;}.k-title{font-size:18px;margin-top:12px;}.bal-amount{font-size:40px;}}
-
-    /* ═══════════════════════════════════════════════════════════
-       ESTILOS DE REGISTER (del documento original)
-    ═══════════════════════════════════════════════════════════ */
-    .steps-bar{display:flex;gap:6px;margin-bottom:20px;width:100%;max-width:400px;}
-    .step-dot{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background .3s;}
-    .step-dot.done{background:var(--a1);}
-    .step-dot.active{background:var(--a3);animation:pulse-bar 1.5s ease-in-out infinite;}
-    @keyframes pulse-bar{0%,100%{opacity:1;}50%{opacity:.5;}}
-    .scan-area{width:240px;height:240px;border-radius:20px;border:2px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto;overflow:hidden;}
-    .scan-area.active{border-color:var(--a3);box-shadow:0 0 0 4px rgba(0,212,255,.1);}
-    .scan-area.ok{border-color:var(--a1);box-shadow:0 0 0 4px rgba(200,255,0,.12);}
-    .scan-area.err{border-color:var(--danger);box-shadow:0 0 0 4px rgba(255,23,68,.12);}
-    .scan-corner{position:absolute;width:20px;height:20px;border-color:currentColor;border-style:solid;}
-    .scan-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
-    .scan-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
-    .scan-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
-    .scan-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
-    .scan-line{position:absolute;width:80%;height:2px;background:linear-gradient(to right,transparent,var(--a3),transparent);animation:scan 2s ease-in-out infinite;opacity:.8;}
-    @keyframes scan{0%{top:20%;}100%{top:80%;}}
-    .info-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;width:100%;margin-bottom:12px;}
-    .info-card.success{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.05);}
-    .info-card.danger{border-color:rgba(255,23,68,.3);background:rgba(255,23,68,.05);}
-    .info-card.warn{border-color:rgba(255,171,0,.3);background:rgba(255,171,0,.05);}
-    .ticket-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--a1);margin:4px 0;}
-    .ticket-event{font-size:14px;color:var(--muted);margin-bottom:12px;}
-    .ticket-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);}
-    .ticket-row:last-child{border-bottom:none;}
-    .ticket-lbl{color:var(--muted);}
-    .form-input{width:100%;padding:14px 16px;border-radius:var(--r-sm);background:var(--surf);border:2px solid var(--border);color:var(--txt);font-size:18px;font-family:monospace;text-align:center;letter-spacing:2px;outline:none;transition:border-color .15s;-webkit-text-fill-color:var(--txt);}
-    .form-input:focus{border-color:var(--a3);}
-    .ev-btn{padding:14px 16px;background:var(--card);border:2px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all .15s;width:100%;text-align:left;margin-bottom:8px;}
-    .ev-btn:hover,.ev-btn:active{border-color:var(--a3);background:rgba(0,212,255,.05);}
-    .ev-btn.selected{border-color:var(--a1);background:rgba(200,255,0,.06);}
-    .ev-nombre{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;}
-    .ev-meta{font-size:12px;color:var(--muted);margin-top:3px;}
-    @media(max-height:680px){.scan-area{width:180px;height:180px;}.nfc-emoji{font-size:40px;}.k-title{font-size:18px;}}
   </style>
 </head>
 <body>
 
 <!-- ═══════════════════════════════════════════════════════════
-     SELECTOR DE MODO
+     SCREEN 1: CÓDIGO DE EMPLEADO
 ═══════════════════════════════════════════════════════════ -->
-<div id="selector-screen" class="screen active">
+<div id="employee-code-screen" class="screen active">
   <div class="station-logo">
     <div class="brand">InOut<span style="color:var(--a1)">.</span>Station</div>
     <div class="sub">Sistema multifunción</div>
   </div>
-  <div class="mode-grid">
-    <div class="mode-card" onclick="STATION.selectMode('kiosk')">
-      <div class="mode-emoji">📱</div>
-      <div class="mode-title">Kiosko</div>
-      <div class="mode-desc">Recarga cashless con Stripe.<br>Pagos con tarjeta y NFC.</div>
-    </div>
-    <div class="mode-card" onclick="STATION.selectMode('register')">
-      <div class="mode-emoji">📝</div>
-      <div class="mode-title">Registro</div>
-      <div class="mode-desc">Enlace de pulseras con entradas.<br>Control de acceso a eventos.</div>
+
+  <div class="card">
+    <div class="card-title">Acceso de empleado</div>
+    <div class="card-subtitle">Introduce tu código de empleado</div>
+    
+    <input 
+      id="employee-code-input" 
+      type="text" 
+      class="form-input"
+      placeholder="0010201" 
+      maxlength="7"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+      onkeydown="if(event.key==='Enter')STATION.submitEmployeeCode()"
+    />
+    
+    <button class="btn btn-p" onclick="STATION.submitEmployeeCode()">
+      Continuar →
+    </button>
+    
+    <div id="code-error" class="error-msg"></div>
+    
+    <div style="margin-top:16px;padding:12px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:var(--r-sm);font-size:12px;color:var(--muted);text-align:center">
+      <strong style="color:var(--a3)">Formato:</strong> XXXYYY<br>
+      <span style="font-size:11px">XXX = Código organización | YYY = Número empleado</span>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     PIN OVERLAY GLOBAL
+     SCREEN 2: PIN DE DESBLOQUEO
 ═══════════════════════════════════════════════════════════ -->
-<div id="global-pin-overlay">
-  <div class="pin-box">
-    <div class="pin-title" id="station-pin-title">PIN requerido</div>
-    <div class="pin-sub">Introduce el PIN de 4 dígitos</div>
+<div id="pin-screen" class="screen">
+  <div class="station-logo">
+    <div class="brand">InOut<span style="color:var(--a1)">.</span>Station</div>
+    <div class="sub">Sistema multifunción</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">PIN de desbloqueo</div>
+    <div class="card-subtitle" id="employee-name-display">Introduce tu PIN de 4 dígitos</div>
+    
     <div class="pin-dots">
-      <div class="pin-dot" id="spd0"></div>
-      <div class="pin-dot" id="spd1"></div>
-      <div class="pin-dot" id="spd2"></div>
-      <div class="pin-dot" id="spd3"></div>
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
     </div>
+    
     <div class="pin-pad">
       <div class="pin-key" onclick="STATION.pinKey('1')">1</div>
       <div class="pin-key" onclick="STATION.pinKey('2')">2</div>
@@ -255,144 +145,36 @@
       <div class="pin-key" onclick="STATION.pinKey('0')">0</div>
       <div class="pin-key" onclick="STATION.pinKey('⌫')">⌫</div>
     </div>
-    <button class="pin-cancel" onclick="STATION.closePIN()">Cancelar</button>
+    
+    <button class="btn btn-g" style="margin-top:16px" onclick="STATION.goBack()">
+      ← Volver
+    </button>
+    
+    <div id="pin-error" class="error-msg"></div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     MODO KIOSK - INICIO
+     LOADING OVERLAY
 ═══════════════════════════════════════════════════════════ -->
-<div id="kiosk-screen" class="screen">
-  <button class="exit-btn" onclick="STATION.exitMode()">✕</button>
-  <div id="toast"></div>
-  <div class="offline-badge" id="offline-badge">⚡ Sin conexión — modo offline</div>
-
-  <div class="oos-screen" id="oos-screen" style="display:none">
-    <div class="oos-emoji">🚫</div>
-    <div class="oos-title" id="oos-title">Fuera de servicio</div>
-    <div class="oos-msg" id="oos-msg">Este kiosco no está disponible en este momento. Por favor, dirígete al personal del evento.</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:8px" id="oos-footer"></div>
-  </div>
-
-  <div class="pin-overlay" id="pin-overlay" style="display:none">
-    <div class="pin-box">
-      <div class="pin-title" id="pin-title">Acceso supervisor</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:4px" id="pin-sub">Introduce el PIN de 4 dígitos</div>
-      <div class="pin-dots" id="pin-dots">
-        <div class="pin-dot" id="pd0"></div>
-        <div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div>
-        <div class="pin-dot" id="pd3"></div>
-      </div>
-      <div class="pin-pad">
-        <div class="pin-key" onclick="pinKey('1')">1</div>
-        <div class="pin-key" onclick="pinKey('2')">2</div>
-        <div class="pin-key" onclick="pinKey('3')">3</div>
-        <div class="pin-key" onclick="pinKey('4')">4</div>
-        <div class="pin-key" onclick="pinKey('5')">5</div>
-        <div class="pin-key" onclick="pinKey('6')">6</div>
-        <div class="pin-key" onclick="pinKey('7')">7</div>
-        <div class="pin-key" onclick="pinKey('8')">8</div>
-        <div class="pin-key" onclick="pinKey('9')">9</div>
-        <div class="pin-key" onclick="pinKey('')" style="opacity:.2"></div>
-        <div class="pin-key" onclick="pinKey('0')">0</div>
-        <div class="pin-key" onclick="pinKey('⌫')">⌫</div>
-      </div>
-      <button class="btn btn-g" style="margin-top:14px;font-size:13px;padding:10px" onclick="closePIN()">Cancelar</button>
-    </div>
-  </div>
-
-  <div class="kiosk">
-    <div class="k-header">
-      <div class="lang-row" id="lang-row"></div>
-      <div class="k-logo">in<span class="hi">out</span><small id="logo-sub">Kiosk · Recarga cashless</small></div>
-      <div style="width:80px;display:flex;justify-content:flex-end">
-        <div id="sup-tap" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px" title="Supervisor" ontouchstart="supTapStart()" ontouchend="supTapEnd()" onmousedown="supTapStart()" onmouseup="supTapEnd()">⚙️</div>
-      </div>
-    </div>
-    <div class="k-body" id="k-body"></div>
-    <div class="k-footer" id="k-footer">InOut Media · Pagos seguros vía Stripe</div>
-  </div>
-
-  <div class="k-status">
-    <span><span class="dot"></span>InOut Kiosk V3.2.6-FIXED</span>
-    <span id="k-time">—</span>
-    <span id="k-nfc">NFC: —</span>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     MODO REGISTER - INICIO
-═══════════════════════════════════════════════════════════ -->
-<div id="register-screen" class="screen">
-  <button class="exit-btn" onclick="STATION.exitMode()">✕</button>
-  <div id="toast"></div>
-
-  <!-- PIN overlay para register -->
-  <div id="pin-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;width:100%;max-width:320px;text-align:center">
-      <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">Acceso de admin</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Introduce el PIN para continuar</div>
-      <div style="display:flex;gap:12px;justify-content:center;margin:16px 0" id="pin-dots">
-        <div id="pd0" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-        <div id="pd1" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-        <div id="pd2" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-        <div id="pd3" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px" id="pin-pad">
-        <div onclick="pinKey('1')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">1</div>
-        <div onclick="pinKey('2')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">2</div>
-        <div onclick="pinKey('3')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">3</div>
-        <div onclick="pinKey('4')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">4</div>
-        <div onclick="pinKey('5')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">5</div>
-        <div onclick="pinKey('6')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">6</div>
-        <div onclick="pinKey('7')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">7</div>
-        <div onclick="pinKey('8')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">8</div>
-        <div onclick="pinKey('9')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">9</div>
-        <div style="padding:18px;opacity:.2">　</div>
-        <div onclick="pinKey('0')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">0</div>
-        <div onclick="pinKey('⌫')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">⌫</div>
-      </div>
-      <button onclick="closePIN()" style="margin-top:14px;width:100%;padding:10px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">Cancelar</button>
-    </div>
-  </div>
-
-  <div class="kiosk">
-    <div class="k-header">
-      <div style="width:40px"></div>
-      <div class="k-logo">in<span class="hi">out</span><small id="logo-sub">Registro · Enlace de pulsera</small></div>
-      <div style="width:40px;display:flex;justify-content:flex-end">
-        <div id="settings-btn" style="cursor:pointer;font-size:18px;color:var(--muted)" onclick="openSettings()" title="Configuración">⚙️</div>
-      </div>
-    </div>
-    <div class="k-body" id="k-body"></div>
-    <div class="k-footer" id="k-footer">InOut Media · Sistema de registro de pulseras</div>
-  </div>
-
-  <div class="k-status">
-    <span><span class="dot"></span>InOut Register v1.0</span>
-    <span id="k-time">—</span>
-    <span id="k-nfc-status">NFC: —</span>
-  </div>
+<div id="loading-overlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Redirigiendo...</div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  STATION CONTROLLER - Gestión central
+//  STATION CONTROLLER - Sistema de código de empleado + PIN
 // ═══════════════════════════════════════════════════════════════
 
-  
 const STATION = {
-  ADMIN_PIN: null, // Se cargará dinámicamente desde Supabase
-  currentMode: null,
+  employeeData: null, // Datos del empleado autenticado
+  organizationData: null, // Datos de la organización
   pinBuffer: '',
-  pinCallback: null,
-  exitBlocked: false,
-  userRole: null,
   supabase: null,
   
   async init() {
-    console.log('🚀 InOut Station v2.0 unified initialized');
+    console.log('🚀 InOut Station v4.0 - Employee Code System (XXXYYY)');
     
     // Inicializar Supabase
     this.supabase = supabase.createClient(
@@ -400,2370 +182,264 @@ const STATION = {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhb3hram53cmNjb3hqY2lwZnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYyNzU5MjEsImV4cCI6MjA1MTg1MTkyMX0.sb_publishable__-K1pC4bOJHRf8JQ__OOzg_jqLxlGla'
     );
     
-    // Cargar PIN del usuario desde Supabase
-    await this.loadUserPIN();
+    // Auto-focus en el input
+    setTimeout(() => document.getElementById('employee-code-input')?.focus(), 100);
+    
+    console.log('✅ Station initialized');
   },
   
-  async loadUserPIN() {
-    try {
-      // Obtener sesión actual
-      const { data: { session } } = await this.supabase.auth.getSession();
-      
-      if (!session) {
-        console.error('❌ No hay sesión activa');
-        this.ADMIN_PIN = '1234'; // Fallback
-        return;
-      }
-      
-      // Consultar empleado con ese auth_user_id
-      const { data: empleado, error } = await this.supabase
-        .from('empleados')
-        .select('pin_desbloqueo, role')
-        .eq('auth_user_id', session.user.id)
-        .single();
-      
-      if (error) {
-        console.error('❌ Error al cargar empleado:', error);
-        this.ADMIN_PIN = '1234'; // Fallback
-        return;
-      }
-      
-      if (!empleado) {
-        console.error('❌ Empleado no encontrado');
-        this.ADMIN_PIN = '1234'; // Fallback
-        return;
-      }
-      
-      // Verificar que sea admin o manager
-      const allowedRoles = ['superadmin', 'admin', 'manager'];
-      if (!allowedRoles.includes(empleado.role)) {
-        console.error('❌ Usuario sin permisos (solo admin/manager)');
-        // Ocultar el selector o mostrar error
-        document.getElementById('selector-screen').innerHTML = `
-          <div style="text-align:center;padding:60px 20px">
-            <div style="font-size:64px;margin-bottom:20px">🚫</div>
-            <div style="font-size:24px;font-weight:700;margin-bottom:10px">Acceso denegado</div>
-            <div style="color:var(--muted);font-size:16px">Solo administradores y managers tienen acceso a Station.</div>
-          </div>
-        `;
-        return;
-      }
-      
-      this.userRole = empleado.role;
-      this.ADMIN_PIN = empleado.pin_desbloqueo || '0607'; // PIN del empleado
-      
-      console.log('✅ PIN cargado desde Supabase para rol:', this.userRole);
-      
-    } catch (err) {
-      console.error('❌ Error inesperado:', err);
-      this.ADMIN_PIN = '1234'; // Fallback
-    }
-  },
-  
-  selectMode(mode) {
-    if (!this.ADMIN_PIN) {
-      alert('Error: PIN no cargado. Recarga la página.');
+  // ══════════════════════════════════════════════════════════
+  //  PASO 1: VALIDAR CÓDIGO DE EMPLEADO (XXXYYY)
+  // ══════════════════════════════════════════════════════════
+  async submitEmployeeCode() {
+    const input = document.getElementById('employee-code-input');
+    const errorDiv = document.getElementById('code-error');
+    const btn = event?.target;
+    
+    const code = input.value.trim();
+    
+    // Validar formato: debe ser 7 dígitos (XXXYYY)
+    if (code.length !== 7) {
+      this.showError(errorDiv, 'El código debe tener 7 dígitos (XXXYYY)');
+      input.classList.add('error');
       return;
     }
-    this.showPIN(`Acceso a ${mode === 'kiosk' ? 'Kiosko' : 'Registro'}`, () => this.enterMode(mode));
-  },
-  
-  enterMode(mode) {
-    console.log('✅ Entrando en modo:', mode);
-    this.currentMode = mode;
-    document.getElementById('selector-screen').classList.remove('active');
-    document.getElementById(`${mode}-screen`).classList.add('active');
-    this.preventExit();
     
-    // Inicializar el modo correspondiente
-    if(mode === 'kiosk') {
-      setTimeout(() => {
-        if(typeof initKiosk === 'function') initKiosk();
-      }, 100);
-    } else if(mode === 'register') {
-      setTimeout(() => {
-        if(typeof initRegister === 'function') initRegister();
-      }, 100);
+    // Extraer partes del código
+    const orgCode = code.substring(0, 3); // XXX
+    const empNum = code.substring(3, 7);   // YYYY
+    
+    console.log('🔍 Buscando empleado:', { code, orgCode, empNum });
+    
+    // Desactivar botón
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
     }
-  },
-  
-  exitMode() {
-    this.showPIN(`Salir de ${this.currentMode === 'kiosk' ? 'Kiosko' : 'Registro'}`, () => this.actuallyExit());
-  },
-  
-  actuallyExit() {
-    document.getElementById(`${this.currentMode}-screen`).classList.remove('active');
-    document.getElementById('selector-screen').classList.add('active');
-    this.currentMode = null;
-    this.allowExit();
-  },
-  
-  showPIN(title, callback) {
-    this.pinBuffer = '';
-    this.pinCallback = callback;
-    document.getElementById('station-pin-title').textContent = title;
-    this.updatePINDots();
-    document.getElementById('global-pin-overlay').classList.add('visible');
-  },
-  
-  closePIN() {
-    this.pinBuffer = '';
-    document.getElementById('global-pin-overlay').classList.remove('visible');
-  },
-  
-  pinKey(key) {
-    if(key === '⌫') this.pinBuffer = this.pinBuffer.slice(0, -1);
-    else if(this.pinBuffer.length < 4) this.pinBuffer += key;
-    this.updatePINDots();
-    if(this.pinBuffer.length === 4) {
-      setTimeout(() => {
-        if(this.pinBuffer === this.ADMIN_PIN) {
-          this.closePIN();
-          if(this.pinCallback) this.pinCallback();
-        } else {
-          this.pinBuffer = '';
-          this.updatePINDots();
-          this.shakeError();
+    
+    try {
+      // Buscar en la tabla empleados
+      const { data: employee, error } = await this.supabase
+        .from('empleados')
+        .select(`
+          *,
+          organizations!inner(
+            id,
+            codigo_organizacion,
+            nombre,
+            slug,
+            access_url
+          )
+        `)
+        .eq('codigo_empleado', code)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (!employee) {
+        console.error('❌ Código no encontrado');
+        this.showError(errorDiv, 'Código de empleado no válido');
+        input.classList.add('error');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Continuar →';
         }
-      }, 150);
-    }
-  },
-  
-  updatePINDots() {
-    for(let i = 0; i < 4; i++) {
-      const dot = document.getElementById('spd' + i);
-      if(dot) {
-        if(i < this.pinBuffer.length) dot.classList.add('filled');
-        else dot.classList.remove('filled');
+        return;
+      }
+      
+      // Verificar que tenga PIN
+      if (!employee.pin_desbloqueo || employee.pin_desbloqueo.length !== 4) {
+        this.showError(errorDiv, 'PIN no configurado para este empleado');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Continuar →';
+        }
+        return;
+      }
+      
+      console.log('✅ Empleado encontrado:', employee);
+      
+      // Guardar datos
+      this.employeeData = employee;
+      this.organizationData = employee.organizations;
+      
+      // Ir a pantalla de PIN
+      this.goToPinScreen();
+      
+    } catch (err) {
+      console.error('❌ Error:', err);
+      this.showError(errorDiv, 'Error de conexión. Intenta de nuevo.');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Continuar →';
       }
     }
   },
   
-  shakeError() {
-    const box = document.querySelector('#global-pin-overlay .pin-box');
-    if(box) {
-      box.style.animation = 'shake 0.4s ease';
-      setTimeout(() => { box.style.animation = ''; }, 400);
+  // ══════════════════════════════════════════════════════════
+  //  NAVEGACIÓN: IR A PANTALLA DE PIN
+  // ══════════════════════════════════════════════════════════
+  goToPinScreen() {
+    document.getElementById('employee-code-screen').classList.remove('active');
+    document.getElementById('pin-screen').classList.add('active');
+    
+    // Mostrar nombre del empleado
+    const nameDisplay = document.getElementById('employee-name-display');
+    if (this.employeeData.nombre) {
+      nameDisplay.textContent = `Empleado: ${this.employeeData.nombre}`;
+    } else if (this.employeeData.email) {
+      nameDisplay.textContent = `Usuario: ${this.employeeData.email}`;
+    } else {
+      nameDisplay.textContent = 'Introduce tu PIN de 4 dígitos';
+    }
+    
+    this.pinBuffer = '';
+    this.updatePinDots();
+  },
+  
+  goBack() {
+    document.getElementById('pin-screen').classList.remove('active');
+    document.getElementById('employee-code-screen').classList.add('active');
+    
+    this.employeeData = null;
+    this.organizationData = null;
+    this.pinBuffer = '';
+    
+    // Limpiar input
+    const input = document.getElementById('employee-code-input');
+    input.value = '';
+    input.classList.remove('error');
+    
+    // Ocultar errores
+    document.getElementById('code-error').classList.remove('visible');
+    document.getElementById('pin-error').classList.remove('visible');
+    
+    setTimeout(() => input.focus(), 100);
+  },
+  
+  // ══════════════════════════════════════════════════════════
+  //  PASO 2: VALIDAR PIN
+  // ══════════════════════════════════════════════════════════
+  pinKey(key) {
+    const errorDiv = document.getElementById('pin-error');
+    errorDiv.classList.remove('visible');
+    
+    if (key === '⌫') {
+      this.pinBuffer = this.pinBuffer.slice(0, -1);
+    } else if (this.pinBuffer.length < 4) {
+      this.pinBuffer += key;
+    }
+    
+    this.updatePinDots();
+    
+    if (this.pinBuffer.length === 4) {
+      setTimeout(() => this.validatePin(), 150);
     }
   },
   
-  preventExit() {
-    this.exitBlocked = true;
-    document.addEventListener('keydown', this.blockKeys.bind(this), {capture: true});
-    history.pushState(null, '', location.href);
-    window.addEventListener('popstate', this.blockBack.bind(this));
-    window.addEventListener('beforeunload', this.blockClose.bind(this));
-  },
-  
-  allowExit() {
-    this.exitBlocked = false;
-    document.removeEventListener('keydown', this.blockKeys.bind(this), {capture: true});
-    window.removeEventListener('popstate', this.blockBack.bind(this));
-    window.removeEventListener('beforeunload', this.blockClose.bind(this));
-  },
-  
-  blockKeys(e) {
-    const blocked = ['F5', 'F11', 'Escape', 'F4'];
-    if(blocked.includes(e.key) || (e.ctrlKey && ['r','w','t','n','q'].includes(e.key.toLowerCase())) || e.altKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
+  updatePinDots() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById('pd' + i);
+      if (dot) {
+        if (i < this.pinBuffer.length) {
+          dot.classList.add('filled');
+        } else {
+          dot.classList.remove('filled');
+        }
+      }
     }
   },
   
-  blockBack() {
-    if(this.exitBlocked) history.pushState(null, '', location.href);
+  async validatePin() {
+    const errorDiv = document.getElementById('pin-error');
+    
+    // Verificar PIN
+    if (this.pinBuffer !== this.employeeData.pin_desbloqueo) {
+      console.error('❌ PIN incorrecto');
+      this.showError(errorDiv, 'PIN incorrecto');
+      this.pinBuffer = '';
+      this.updatePinDots();
+      this.shakeCard();
+      return;
+    }
+    
+    console.log('✅ PIN correcto');
+    
+    // Registrar el clocking (acceso)
+    await this.registerClocking();
+    
+    // Redirigir a la organización
+    this.redirectToOrganization();
   },
   
-  blockClose(e) {
-    if(this.exitBlocked) {
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
+  // ══════════════════════════════════════════════════════════
+  //  REGISTRAR CLOCKING (ENTRADA AL SISTEMA)
+  // ══════════════════════════════════════════════════════════
+  async registerClocking() {
+    try {
+      const { error } = await this.supabase
+        .from('employee_clocking')
+        .insert({
+          codigo_empleado: this.employeeData.codigo_empleado,
+          organization_id: this.employeeData.organization_id,
+          pin_desbloqueo: this.employeeData.pin_desbloqueo,
+          dated_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        console.warn('⚠️ No se pudo registrar clocking:', error);
+      } else {
+        console.log('✅ Clocking registrado');
+      }
+    } catch (err) {
+      console.warn('⚠️ Error al registrar clocking:', err);
+    }
+  },
+  
+  // ══════════════════════════════════════════════════════════
+  //  REDIRECCIÓN A LA ORGANIZACIÓN
+  // ══════════════════════════════════════════════════════════
+  redirectToOrganization() {
+    const overlay = document.getElementById('loading-overlay');
+    const text = document.getElementById('loading-text');
+    
+    overlay.classList.add('visible');
+    text.textContent = `Redirigiendo a ${this.organizationData.nombre}...`;
+    
+    setTimeout(() => {
+      // Priorizar access_url, si no existe construir desde slug
+      const url = this.organizationData.access_url || 
+                  `https://${this.organizationData.slug}.inout-media.es`;
+      
+      console.log('🔄 Redirecting to:', url);
+      window.location.href = url;
+    }, 1000);
+  },
+  
+  // ══════════════════════════════════════════════════════════
+  //  UTILIDADES
+  // ══════════════════════════════════════════════════════════
+  showError(element, message) {
+    element.textContent = message;
+    element.classList.add('visible');
+  },
+  
+  shakeCard() {
+    const card = document.querySelector('#pin-screen .card');
+    if (card) {
+      card.style.animation = 'shake 0.4s ease';
+      setTimeout(() => { card.style.animation = ''; }, 400);
     }
   }
 };
- 
+
 // Inicializar cuando cargue la página
 window.addEventListener('DOMContentLoaded', () => {
   STATION.init();
 });
- 
-console.log('📦 Station controller loaded with Supabase PIN');
+
+console.log('📦 InOut Station v4.0 loaded');
 </script>
 
-<!-- NOTA: Los scripts completos de KIOSK y REGISTER irían aquí -->
-<!-- Debido al tamaño (~3000 líneas cada uno), los extraerás de los documentos originales -->
-<!-- y los insertarás entre estos tags <script> y </script> -->
-
-<script>
-// ═══════════════════════════════════════════════════════════════
-//  KIOSK INITIALIZATION WRAPPER
-// ═══════════════════════════════════════════════════════════════
-<div id="toast"></div>
-<div class="offline-badge" id="offline-badge">⚡ Sin conexión — modo offline</div>
-
-<div class="oos-screen" id="oos-screen" style="display:none">
-  <div class="oos-emoji">🚫</div>
-  <div class="oos-title" id="oos-title">Fuera de servicio</div>
-  <div class="oos-msg" id="oos-msg">Este kiosco no está disponible en este momento. Por favor, dirígete al personal del evento.</div>
-  <div style="font-size:12px;color:var(--muted);margin-top:8px" id="oos-footer"></div>
-</div>
-
-<div class="pin-overlay" id="pin-overlay" style="display:none">
-  <div class="pin-box">
-    <div class="pin-title" id="pin-title">Acceso supervisor</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:4px" id="pin-sub">Introduce el PIN de 4 dígitos</div>
-    <div class="pin-dots" id="pin-dots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="pin-pad">
-      <div class="pin-key" onclick="pinKey('1')">1</div>
-      <div class="pin-key" onclick="pinKey('2')">2</div>
-      <div class="pin-key" onclick="pinKey('3')">3</div>
-      <div class="pin-key" onclick="pinKey('4')">4</div>
-      <div class="pin-key" onclick="pinKey('5')">5</div>
-      <div class="pin-key" onclick="pinKey('6')">6</div>
-      <div class="pin-key" onclick="pinKey('7')">7</div>
-      <div class="pin-key" onclick="pinKey('8')">8</div>
-      <div class="pin-key" onclick="pinKey('9')">9</div>
-      <div class="pin-key" onclick="pinKey('')" style="opacity:.2"></div>
-      <div class="pin-key" onclick="pinKey('0')">0</div>
-      <div class="pin-key" onclick="pinKey('⌫')">⌫</div>
-    </div>
-    <button class="btn btn-g" style="margin-top:14px;font-size:13px;padding:10px" onclick="closePIN()">Cancelar</button>
-  </div>
-</div>
-
-<div class="kiosk">
-  <div class="k-header">
-    <div class="lang-row" id="lang-row"></div>
-    <div class="k-logo">in<span class="hi">out</span><small id="logo-sub">Kiosk · Recarga cashless</small></div>
-    <div style="width:80px;display:flex;justify-content:flex-end">
-      <div id="sup-tap" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px" title="Supervisor" ontouchstart="supTapStart()" ontouchend="supTapEnd()" onmousedown="supTapStart()" onmouseup="supTapEnd()">⚙️</div>
-    </div>
-  </div>
-  <div class="k-body" id="k-body"></div>
-  <div class="k-footer" id="k-footer">InOut Media · Pagos seguros vía Stripe</div>
-</div>
-
-<div class="k-status">
-  <span><span class="dot"></span>InOut Kiosk V3.2.6-FIXED</span>
-  <span id="k-time">—</span>
-  <span id="k-nfc">NFC: —</span>
-</div>
-// 🔧 DEBUG LOGGER
-console.log('%c🚀 KIOSK DEBUG v3.3 INICIADO', 'background:#c8ff00;color:#000;font-weight:bold;padding:4px 8px');
-console.log('📍 Timestamp:', new Date().toISOString());
-  
-<script>
-// ══════════════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════════════
-const SB_URL          = 'https://raoxkjnwrccoxjcipfpv.supabase.co';
-const SB_KEY          = 'sb_publishable__-K1pC4bOJHRf8JQ__OOzg_jqLxlGla';
-const API_URL         = 'https://inout-api.vercel.app';
-const STRIPE_PK       = 'pk_test_51TNg3o5UAjvrvcJnygUBrXOkDnOtxhfrTZPUtiAVXan6CzMW0Mjy3rq8vwlojTDiFENLDH3Sjze47siIGe9SBOgQ00dSeVVduC';
-const FEE_PCT = 5;
-const FEE_FIXED = 0.30; // Comisión fija en euros
-const AMOUNTS         = [5, 10, 20, 30, 50, 100];
-const POS_ID          = 'kiosk-01';
-const SUP_PIN         = '1234';
-const AUTO_REFRESH_HOUR = 4;
-const MAX_BALANCE     = 200;
-
-// ══════════════════════════════════════════════════════════
-//  I18N
-// ══════════════════════════════════════════════════════════
-const LANGS = {
-  es:{flag:'🇪🇸',name:'ES',tagline:'Kiosk · Recarga cashless',footer:'InOut Media · Pagos seguros vía Stripe',tap_wristband:'Acerca tu pulsera',tap_sub:'Para consultar tu saldo o recargar.',enter_uid:'Introducir UID manualmente',check_bal:'Consultar saldo sin recargar →',nfc_hint:'Acerca tu pulsera para ver el saldo.',uid_title:'Introducir UID',uid_hint:'Encuéntralo en el reverso de tu pulsera o en tu ticket.',uid_ph:'Ej: A3B21F8C',verify:'Verificar pulsera',back:'← Volver',balance_label:'Saldo disponible',how_much:'¿Cuánto quieres recargar?',pays:'Pagas',select_amount:'Selecciona un importe',pay_btn:'Pagar {total} € · Recargar {amt} €',custom_ph:'Otro importe (€)',history:'Ver historial',start:'← Inicio',summary:'Resumen del pago',wristband:'Pulsera',holder:'Titular',recharge:'Recarga',commission:'Comisión',total:'Total a pagar',confirm:'Confirmar y pagar con tarjeta',change_amount:'← Cambiar importe',cancel:'Cancelar',complete_payment:'Verificando pago…',verifying:'🔄 Verificando…',pending:'⏳ Pago pendiente',auto_check:'Se verifica automáticamente cada 5 seg.',verify_now:'🔄 Verificar ahora',cancel_payment:'Cancelar pago',success_title:'¡Recarga completada!',new_balance:'Nuevo saldo:',back_soon:'Volviendo al inicio en {n} seg…',back_now:'Volver ahora',history_title:'Historial',current_balance:'Saldo actual',back_profile:'← Volver al perfil',no_txs:'Sin movimientos registrados.',recharge_cashless:'Recarga cashless',consumption:'Consumo',offline_queue:'Cola offline: {n} operación(es) pendiente(s)',supervisor:'Panel Supervisor',today_topups:'Recargas hoy',today_amount:'Importe total',today_comm:'Comisiones',avg_topup:'Ticket medio',offline_ops:'Ops. offline pendientes',last_topup:'Última recarga',never:'Nunca',oos_toggle:'Activar/Desactivar fuera de servicio',oos_on:'🚫 Activar fuera de servicio',oos_off:'✅ Desactivar fuera de servicio',receipt_sent:'✅ Recibo enviado',receipt_error:'No se pudo enviar el recibo',no_email:'Sin email asociado a esta pulsera',suspect_warn:'⚠️ Pulsera con actividad sospechosa',balance_limit:'Saldo máximo de {max}€ alcanzado'},
-  en:{flag:'🇬🇧',name:'EN',tagline:'Kiosk · Cashless Top-up',footer:'InOut Media · Secure payments via Stripe',tap_wristband:'Tap your wristband',tap_sub:'To check your balance or top up.',enter_uid:'Enter UID manually',check_bal:'Check balance without top-up →',nfc_hint:'Tap your wristband to see your balance.',uid_title:'Enter UID',uid_hint:'Find it on the back of your wristband or your ticket.',uid_ph:'e.g. A3B21F8C',verify:'Verify wristband',back:'← Back',balance_label:'Available balance',how_much:'How much do you want to top up?',pays:'You pay',select_amount:'Select an amount',pay_btn:'Pay {total} € · Top up {amt} €',custom_ph:'Other amount (€)',history:'View history',start:'← Home',summary:'Payment summary',wristband:'Wristband',holder:'Name',recharge:'Top-up',commission:'Fee',total:'Total to pay',confirm:'Confirm and pay by card',change_amount:'← Change amount',cancel:'Cancel',complete_payment:'Verifying payment…',verifying:'🔄 Verifying…',pending:'⏳ Payment pending',auto_check:'Verified automatically every 5 sec.',verify_now:'🔄 Verify now',cancel_payment:'Cancel payment',success_title:'Top-up complete!',new_balance:'New balance:',back_soon:'Back to home in {n} sec…',back_now:'Back now',history_title:'History',current_balance:'Current balance',back_profile:'← Back to profile',no_txs:'No transactions recorded.',recharge_cashless:'Cashless top-up',consumption:'Purchase',offline_queue:'Offline queue: {n} pending operation(s)',supervisor:'Supervisor Panel',today_topups:"Today's top-ups",today_amount:'Total amount',today_comm:'Commissions',avg_topup:'Avg. top-up',offline_ops:'Pending offline ops',last_topup:'Last top-up',never:'Never',oos_toggle:'Toggle out of service',oos_on:'🚫 Set out of service',oos_off:'✅ Back in service',receipt_sent:'✅ Receipt sent',receipt_error:'Could not send receipt',no_email:'No email linked to this wristband',suspect_warn:'⚠️ Suspicious wristband activity',balance_limit:'Maximum balance of {max}€ reached'},
-  fr:{flag:'🇫🇷',name:'FR',tagline:'Kiosk · Rechargement cashless',footer:'InOut Media · Paiements sécurisés via Stripe',tap_wristband:'Approchez votre bracelet',tap_sub:'Pour consulter votre solde ou recharger.',enter_uid:"Saisir l'UID manuellement",check_bal:'Consulter le solde sans recharger →',nfc_hint:'Approchez votre bracelet pour voir le solde.',uid_title:"Saisir l'UID",uid_hint:'Trouvez-le au dos de votre bracelet ou sur votre billet.',uid_ph:'Ex: A3B21F8C',verify:'Vérifier le bracelet',back:'← Retour',balance_label:'Solde disponible',how_much:'Combien voulez-vous recharger?',pays:'Vous payez',select_amount:'Sélectionnez un montant',pay_btn:'Payer {total} € · Recharger {amt} €',custom_ph:'Autre montant (€)',history:"Voir l'historique",start:'← Accueil',summary:'Récapitulatif du paiement',wristband:'Bracelet',holder:'Titulaire',recharge:'Rechargement',commission:'Commission',total:'Total à payer',confirm:'Confirmer et payer par carte',change_amount:'← Changer le montant',cancel:'Annuler',complete_payment:'Vérification du paiement…',verifying:'🔄 Vérification…',pending:'⏳ Paiement en attente',auto_check:'Vérifié automatiquement toutes les 5 sec.',verify_now:'🔄 Vérifier maintenant',cancel_payment:'Annuler le paiement',success_title:'Rechargement effectué!',new_balance:'Nouveau solde:',back_soon:"Retour à l'accueil dans {n} sec…",back_now:'Retour maintenant',history_title:'Historique',current_balance:'Solde actuel',back_profile:'← Retour au profil',no_txs:'Aucune transaction enregistrée.',recharge_cashless:'Rechargement cashless',consumption:'Consommation',offline_queue:'File hors ligne: {n} opération(s) en attente',supervisor:'Panneau superviseur',today_topups:"Rechargements aujourd'hui",today_amount:'Montant total',today_comm:'Commissions',avg_topup:'Ticket moyen',offline_ops:'Ops. hors ligne en attente',last_topup:'Dernier rechargement',never:'Jamais',oos_toggle:'Activer/désactiver hors service',oos_on:'🚫 Mettre hors service',oos_off:'✅ Remettre en service',receipt_sent:'✅ Reçu envoyé',receipt_error:"Impossible d'envoyer le reçu",no_email:'Pas d\'email associé à ce bracelet',suspect_warn:'⚠️ Activité suspecte détectée',balance_limit:'Solde maximum de {max}€ atteint'},
-  it:{flag:'🇮🇹',name:'IT',tagline:'Kiosk · Ricarica cashless',footer:'InOut Media · Pagamenti sicuri tramite Stripe',tap_wristband:'Avvicina il tuo braccialetto',tap_sub:'Per consultare il saldo o ricaricare.',enter_uid:'Inserisci UID manualmente',check_bal:'Controlla saldo senza ricaricare →',nfc_hint:'Avvicina il braccialetto per vedere il saldo.',uid_title:'Inserisci UID',uid_hint:'Trovalo sul retro del braccialetto o sul biglietto.',uid_ph:'Es: A3B21F8C',verify:'Verifica braccialetto',back:'← Indietro',balance_label:'Saldo disponibile',how_much:'Quanto vuoi ricaricare?',pays:'Paghi',select_amount:'Seleziona un importo',pay_btn:'Paga {total} € · Ricarica {amt} €',custom_ph:'Altro importo (€)',history:'Vedi cronologia',start:'← Inizio',summary:'Riepilogo pagamento',wristband:'Braccialetto',holder:'Intestatario',recharge:'Ricarica',commission:'Commissione',total:'Totale da pagare',confirm:'Conferma e paga con carta',change_amount:'← Cambia importo',cancel:'Annulla',complete_payment:'Verifica pagamento…',verifying:'🔄 Verifica in corso…',pending:'⏳ Pagamento in attesa',auto_check:'Verificato automaticamente ogni 5 sec.',verify_now:'🔄 Verifica ora',cancel_payment:'Annulla pagamento',success_title:'Ricarica completata!',new_balance:'Nuovo saldo:',back_soon:'Ritorno alla home in {n} sec…',back_now:'Torna ora',history_title:'Cronologia',current_balance:'Saldo attuale',back_profile:'← Torna al profilo',no_txs:'Nessuna transazione registrata.',recharge_cashless:'Ricarica cashless',consumption:'Consumo',offline_queue:'Coda offline: {n} operazione/i in attesa',supervisor:'Pannello supervisore',today_topups:'Ricariche oggi',today_amount:'Importo totale',today_comm:'Commissioni',avg_topup:'Ticket medio',offline_ops:'Op. offline in attesa',last_topup:'Ultima ricarica',never:'Mai',oos_toggle:'Attiva/disattiva fuori servizio',oos_on:'🚫 Metti fuori servizio',oos_off:'✅ Rimetti in servizio',receipt_sent:'✅ Ricevuta inviata',receipt_error:'Impossibile inviare la ricevuta',no_email:'Nessuna email associata a questo braccialetto',suspect_warn:'⚠️ Attività sospetta rilevata',balance_limit:'Saldo massimo di {max}€ raggiunto'},
-  cat:{flag:'🏴',name:'CAT',tagline:'Kiosk · Recàrrega cashless',footer:'InOut Media · Pagaments segurs via Stripe',tap_wristband:'Apropa la teva polsera',tap_sub:'Per consultar el teu saldo o recarregar.',enter_uid:'Introduir UID manualment',check_bal:'Consultar saldo sense recarregar →',nfc_hint:'Apropa la polsera per veure el saldo.',uid_title:'Introduir UID',uid_hint:"Troba-ho al revers de la polsera o al teu tiquet.",uid_ph:'Ex: A3B21F8C',verify:'Verificar polsera',back:'← Tornar',balance_label:'Saldo disponible',how_much:'Quant vols recarregar?',pays:'Pagues',select_amount:'Selecciona un import',pay_btn:'Pagar {total} € · Recarregar {amt} €',custom_ph:'Altre import (€)',history:'Veure historial',start:'← Inici',summary:'Resum del pagament',wristband:'Polsera',holder:'Titular',recharge:'Recàrrega',commission:'Comissió',total:'Total a pagar',confirm:'Confirmar i pagar amb targeta',change_amount:'← Canviar import',cancel:'Cancel·lar',complete_payment:'Verificant pagament…',verifying:'🔄 Verificant…',pending:'⏳ Pagament pendent',auto_check:'Es verifica automàticament cada 5 seg.',verify_now:'🔄 Verificar ara',cancel_payment:'Cancel·lar pagament',success_title:'Recàrrega completada!',new_balance:'Nou saldo:',back_soon:"Tornant a l'inici en {n} seg…",back_now:'Tornar ara',history_title:'Historial',current_balance:'Saldo actual',back_profile:'← Tornar al perfil',no_txs:'Sense moviments registrats.',recharge_cashless:'Recàrrega cashless',consumption:'Consum',offline_queue:'Cua offline: {n} operació/ns pendents',supervisor:'Panell supervisor',today_topups:'Recàrregues avui',today_amount:'Import total',today_comm:'Comissions',avg_topup:'Tiquet mitjà',offline_ops:'Ops. offline pendents',last_topup:'Última recàrrega',never:'Mai',oos_toggle:'Activar/desactivar fora de servei',oos_on:'🚫 Posar fora de servei',oos_off:'✅ Tornar al servei',receipt_sent:'✅ Rebut enviat',receipt_error:"No s'ha pogut enviar el rebut",no_email:'Sense email associat a aquesta polsera',suspect_warn:'⚠️ Activitat sospitosa detectada',balance_limit:'Saldo màxim de {max}€ assolit'}
-};
-
-// ══════════════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════════════
-const _sb        = supabase.createClient(SB_URL, SB_KEY);
-let lang         = localStorage.getItem('k_lang') || 'es';
-let nfcSupported = false;
-let nfcReader    = null;
-let wristband    = null;
-let selectedAmt  = 0;
-let checkInterval= null;
-let idleTimer    = null;
-let oosActive    = JSON.parse(localStorage.getItem('k_oos') || 'false');
-let oosMsg       = localStorage.getItem('k_oos_msg') || '';
-let offlineQueue = JSON.parse(localStorage.getItem('k_offline_q') || '[]');
-let supTapTimer  = null;
-let pinBuffer    = '';
-let pinCallback  = null;
-let isOnline     = navigator.onLine;
-let todayStats   = JSON.parse(sessionStorage.getItem('k_stats') || '{"topups":0,"amount":0,"comm":0,"last":null}');
-
-// ══════════════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════════════
-const T = (key, vars={}) => {
-  let s = (LANGS[lang]||LANGS.es)[key] || key;
-  Object.entries(vars).forEach(([k,v]) => { s = s.replace('{'+k+'}', v); });
-  return s;
-};
-const fmt = n => (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
-const calcFee = a => parseFloat(((a * FEE_PCT / 100) + FEE_FIXED).toFixed(2));
-  const fmtDate = iso => iso
-  ? new Date(iso).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
-  : '—';
-
-let _toastTimer = null;
-function toast(msg, type='', ms=2800){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show' + (type ? ' '+type : '');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), ms);
-}
-
-function resetIdleTimer(){
-  clearTimeout(idleTimer);
-  const body = document.getElementById('k-body');
-  if(!body || body.dataset.screen === 'idle') return;
-  idleTimer = setTimeout(() => { toast(T('cancel'), 'warn'); showIdle(); }, 120_000);
-}
-
-function saveStats(){ sessionStorage.setItem('k_stats', JSON.stringify(todayStats)); }
-
-// ══════════════════════════════════════════════════════════
-//  LANG
-// ══════════════════════════════════════════════════════════
-function setLang(l){
-  lang = l; localStorage.setItem('k_lang', l);
-  document.getElementById('logo-sub').textContent = T('tagline');
-  document.getElementById('k-footer').textContent = T('footer');
-  renderLangRow();
-  const screen = document.getElementById('k-body').dataset.screen;
-  if(screen === 'idle') showIdle();
-}
-
-function renderLangRow(){
-  const row = document.getElementById('lang-row');
-  row.innerHTML = Object.entries(LANGS).map(([k,v]) =>
-    `<button class="lang-btn ${lang===k?'active':''}" onclick="setLang('${k}')">${v.flag} ${v.name}</button>`
-  ).join('');
-}
-
-// ══════════════════════════════════════════════════════════
-//  OFFLINE
-// ══════════════════════════════════════════════════════════
-window.addEventListener('online',  () => { isOnline = true;  document.getElementById('offline-badge').classList.remove('visible'); flushOfflineQueue(); });
-window.addEventListener('offline', () => { isOnline = false; document.getElementById('offline-badge').classList.add('visible'); });
-
-async function flushOfflineQueue(){
-  if(!offlineQueue.length) return;
-  toast(`Sincronizando ${offlineQueue.length} op(s) offline…`, '', 4000);
-  const pending = [...offlineQueue];
-  offlineQueue = []; localStorage.setItem('k_offline_q', JSON.stringify(offlineQueue));
-  for(const op of pending){
-    try{
-      const res = await fetch(API_URL+'/api/stripe/topup', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(op)});
-      const d = await res.json();
-      if(!d.error) logEvent('offline_flushed', {uid:op.uid, amount:op.amount});
-    }catch(e){ offlineQueue.push(op); }
-  }
-  localStorage.setItem('k_offline_q', JSON.stringify(offlineQueue));
-}
-
-// ══════════════════════════════════════════════════════════
-//  CLOCK + AUTO-REFRESH
-// ══════════════════════════════════════════════════════════
-function startClock(){
-  const tick = () => { const el = document.getElementById('k-time'); if(el) el.textContent = new Date().toLocaleTimeString('es-ES'); };
-  tick(); setInterval(tick, 1000);
-  scheduleAutoRefresh();
-}
-
-function scheduleAutoRefresh(){
-  const now = new Date(), target = new Date(now);
-  target.setHours(AUTO_REFRESH_HOUR, 0, 0, 0);
-  if(now >= target) target.setDate(target.getDate() + 1);
-  setTimeout(() => { logEvent('auto_refresh', {}); location.reload(); }, target - now);
-}
-
-// ══════════════════════════════════════════════════════════
-//  NFC
-// ══════════════════════════════════════════════════════════
-async function initNFC(){
-  const el = document.getElementById('k-nfc');
-  if(window.ANDROID_KIOSK){
-    window.onAndroidNFCScan = (uid) => { if(uid && uid.length >= 4) onScan(uid.toUpperCase()); };
-    nfcSupported = window.ANDROID_NFC === true;
-    if(el){ el.textContent = nfcSupported ? 'NFC: Activo (App)' : 'NFC: App sin NFC'; el.style.color = nfcSupported ? 'var(--a1)' : 'var(--muted)'; }
-    return;
-  }
-  if(!('NDEFReader' in window)){
-    nfcSupported = false;
-    if(el) el.textContent = 'NFC: No disponible';
-    return;
-  }
-  nfcSupported = true;
-  if(el){ el.textContent = 'NFC: Activo'; el.style.color = 'var(--a1)'; }
-  try{
-    nfcReader = new NDEFReader();
-    await nfcReader.scan();
-    nfcReader.onreading = ev => onScan(ev.serialNumber.replace(/:/g,'').toUpperCase());
-    nfcReader.onreadingerror = () => toast('Error leyendo NFC', 'err');
-  }catch(e){
-    nfcSupported = false;
-    if(el) el.textContent = 'NFC: Sin permiso';
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCAN HANDLER
-// ══════════════════════════════════════════════════════════
-async function onScan(uid){
-  if(oosActive) return;
-  if(navigator.vibrate) navigator.vibrate(100);
-  const body = document.getElementById('k-body');
-  if(body.dataset.screen === 'balance' && wristband?.uid === uid) return;
-  const ring = document.querySelector('.nfc-ring');
-  if(ring) ring.className = 'nfc-ring found';
-
-  const {data:wb, error} = await _sb.from('rfid_wristbands').select('*').eq('uid', uid).maybeSingle();
-  if(error || !wb){
-    if(ring) ring.className = 'nfc-ring err-ring';
-    toast('Pulsera no registrada: '+uid, 'err'); setTimeout(() => showIdle(), 2200); return;
-  }
-  if(wb.status !== 'active'){
-    if(ring) ring.className = 'nfc-ring err-ring';
-    toast('Pulsera bloqueada o inactiva', 'err'); setTimeout(() => showIdle(), 2200); return;
-  }
-  await checkSuspiciousActivity(wb);
-  wristband = wb; showBalance(wb);
-}
-
-async function checkSuspiciousActivity(wb){
-  try{
-    const since = new Date(Date.now() - 60*60*1000).toISOString();
-    const {data:txs} = await _sb.from('rfid_transactions').select('amount').eq('wristband_id', wb.id).gte('created_at', since).gt('amount', 0);
-    const totalLastHour = (txs||[]).reduce((s,t) => s+t.amount, 0);
-    if(totalLastHour >= 150){ toast(T('suspect_warn'), 'warn', 5000); logEvent('suspect_activity', {uid:wb.uid, amount_1h:totalLastHour}); }
-  }catch(e){}
-}
-
-// ══════════════════════════════════════════════════════════
-//  MANUAL UID
-// ══════════════════════════════════════════════════════════
-function manualUID(){
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'manual'; resetIdleTimer();
-  body.innerHTML = `
-    <div style="width:100%;max-width:380px;text-align:center">
-      <div style="font-family:Syne;font-size:20px;font-weight:700;margin-bottom:8px">${T('uid_title')}</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:18px">${T('uid_hint')}</div>
-      <input id="uid-in" type="text" autocomplete="off" spellcheck="false"
-        placeholder="${T('uid_ph')}"
-        style="width:100%;padding:15px 16px;border-radius:var(--r-sm);background:var(--surf);border:2px solid var(--border);color:var(--txt);font-size:20px;text-align:center;font-family:monospace;letter-spacing:3px;outline:none;-webkit-text-fill-color:var(--txt);transition:border-color .15s;"
-        oninput="this.value=this.value.replace(/[^a-fA-F0-9 :]/g,'').toUpperCase()"
-        onkeydown="if(event.key==='Enter')submitManualUID()"
-      />
-      <button class="btn btn-p" style="margin-top:13px" onclick="submitManualUID()">${T('verify')}</button>
-      <button class="btn btn-g" style="margin-top:8px" onclick="showIdle()">${T('back')}</button>
-    </div>`;
-  setTimeout(() => document.getElementById('uid-in')?.focus(), 80);
-}
-
-function submitManualUID(){
-  const raw = (document.getElementById('uid-in')?.value || '').trim();
-  const uid = raw.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
-  if(uid.length < 4){ toast(T('uid_ph'), 'warn'); return; }
-  onScan(uid);
-}
-
-function consultarSaldo(){
-  if(nfcSupported){ toast(T('nfc_hint'), '', 3500); }
-  else manualUID();
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 1 — IDLE
-// ══════════════════════════════════════════════════════════
-function showIdle(){
-  if(oosActive){ showOOS(); return; }
-  wristband = null; selectedAmt = 0;
-  clearInterval(checkInterval); checkInterval = null;
-  clearTimeout(idleTimer);
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'idle';
-  body.innerHTML = `
-    <div class="nfc-ring scanning"><span class="nfc-emoji">👋</span></div>
-    <div class="k-title">${T('tap_wristband')}</div>
-    <div class="k-sub">${T('tap_sub')}</div>
-    <div style="width:100%;max-width:360px;margin-top:24px;display:flex;flex-direction:column;gap:9px">
-      <button class="btn btn-g" onclick="manualUID()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        ${T('enter_uid')}
-      </button>
-      <button class="btn btn-g" style="font-size:13px;min-height:44px;padding:11px" onclick="consultarSaldo()">${T('check_bal')}</button>
-    </div>
-    ${offlineQueue.length ? `<div style="margin-top:14px;font-size:12px;color:var(--warn);text-align:center">⚡ ${T('offline_queue',{n:offlineQueue.length})}</div>` : ''}
-    ${!nfcSupported ? '<div style="margin-top:12px;font-size:12px;color:var(--muted);text-align:center">NFC no disponible — usa el UID manual.</div>' : ''}`;
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 2 — BALANCE
-// ══════════════════════════════════════════════════════════
-function showBalance(wb){
-  selectedAmt = 0;
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'balance'; resetIdleTimer();
-  body.innerHTML = `
-    <div class="bal-card">
-      <div class="bal-name">${wb.holder_name||'— Sin nombre —'}</div>
-      <div class="bal-uid">${wb.uid}</div>
-      <div class="bal-amount">${fmt(wb.balance)}<span style="font-size:22px;font-weight:400;color:rgba(200,255,0,.5)"> €</span></div>
-      <div class="bal-label">${T('balance_label')}</div>
-    </div>
-    <div style="font-family:Syne;font-weight:700;font-size:16px;margin-top:18px;align-self:flex-start">${T('how_much')}</div>
-    <div class="topup-grid">
-      ${AMOUNTS.map(a => `
-        <div class="topup-btn" id="tb-${a}" onclick="selectAmount(${a})">
-          <div class="t-amount">${a}€</div>
-          <div class="t-fee">${T('pays')} ${fmt(a+calcFee(a))}€</div>
-        </div>`).join('')}
-    </div>
-    <input id="custom-amt" type="number" min="1" max="500" step="0.5" class="custom-input" placeholder="${T('custom_ph')}" oninput="selectCustomAmount(this)"/>
-    <div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:9px">
-      <button class="btn btn-p" id="pay-btn" onclick="showSummary()" disabled>${T('select_amount')}</button>
-      <button class="btn btn-g" style="font-size:13px;min-height:44px;padding:11px" onclick="showHistory()">${T('history')}</button>
-      <button class="btn btn-g" style="font-size:13px;min-height:44px;padding:11px" onclick="showIdle()">${T('start')}</button>
-    </div>`;
-}
-
-function selectAmount(a){
-  selectedAmt = a;
-  document.querySelectorAll('.topup-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('tb-'+a)?.classList.add('selected');
-  const ci = document.getElementById('custom-amt');
-  if(ci){ ci.value = ''; ci.classList.remove('has-value'); }
-  updatePayBtn();
-}
-
-function selectCustomAmount(input){
-  const v = parseFloat(input.value);
-  document.querySelectorAll('.topup-btn').forEach(b => b.classList.remove('selected'));
-  if(!isNaN(v) && v >= 1 && v <= 500){ selectedAmt = v; input.classList.add('has-value'); }
-  else{ selectedAmt = 0; input.classList.remove('has-value'); }
-  updatePayBtn();
-}
-
-function updatePayBtn(){
-  const btn = document.getElementById('pay-btn'); if(!btn) return;
-  if(selectedAmt > 0){
-    const total = selectedAmt + calcFee(selectedAmt);
-    btn.disabled = false;
-    btn.innerHTML = T('pay_btn', {total:fmt(total), amt:fmt(selectedAmt)});
-  } else { btn.disabled = true; btn.textContent = T('select_amount'); }
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 3 — RESUMEN
-// ══════════════════════════════════════════════════════════
-function showSummary(){
-  if(!selectedAmt || !wristband) return;
-  if((wristband.balance||0) + selectedAmt > MAX_BALANCE){ 
-    toast(T('balance_limit',{max:MAX_BALANCE}), 'warn', 4000); 
-    return; 
-  }
-  
-  const fee = calcFee(selectedAmt), total = selectedAmt + fee;
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'summary'; 
-  resetIdleTimer();
-  
-  body.innerHTML = `
-    <div style="font-family:Syne;font-size:19px;font-weight:700;text-align:center;width:100%;margin-bottom:16px">
-      ${T('summary')}
-    </div>
-    
-    <div class="summary">
-      <div class="sum-row">
-        <span>${T('wristband')}</span>
-        <span class="val" style="font-family:monospace;font-size:12px">${wristband.uid}</span>
-      </div>
-      <div class="sum-row">
-        <span>${T('holder')}</span>
-        <span class="val">${wristband.holder_name||'—'}</span>
-      </div>
-      <div class="sum-row">
-        <span>${T('recharge')}</span>
-        <span class="val">${fmt(selectedAmt)} €</span>
-      </div>
-      <div class="sum-row">
-        <span>${T('commission')} (${FEE_PCT}%)</span>
-        <span class="val" style="color:var(--muted)">${fmt(fee)} €</span>
-      </div>
-      <div class="sum-row total">
-        <span>${T('total')}</span>
-        <span class="val">${fmt(total)} €</span>
-      </div>
-    </div>
-    
-    <!-- SELECTOR DE MÉTODO DE PAGO -->
-    <div style="margin:20px 0 16px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm)">
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted)">
-        💳 Método de pago:
-      </div>
-      <div style="display:flex;gap:8px">
-<button 
-  id="btn-terminal" 
-  class="payment-method-btn" 
-  onclick="selectPaymentMethod('terminal')"
-  style="flex:1;padding:12px;background:var(--bg);color:var(--muted);border:2px solid var(--border);border-radius:var(--r-sm);font-weight:600;cursor:pointer;transition:all 0.2s"
->
-  🏪 Datáfono
-</button>
-<button 
-  id="btn-online" 
-  class="payment-method-btn" 
-  onclick="selectPaymentMethod('online')"
-  style="flex:1;padding:12px;background:var(--bg);color:var(--muted);border:2px solid var(--border);border-radius:var(--r-sm);font-weight:600;cursor:pointer;transition:all 0.2s"
->
-  🌐 Online
-</button>
-      </div>
-      <div id="payment-method-info" style="margin-top:8px;font-size:11px;color:var(--warn);text-align:center">
-  👆 Selecciona un método de pago
-</div>
-    </div>
-    
-    <div style="width:100%;display:flex;flex-direction:column;gap:9px">
-      <button class="btn btn-p" id="confirm-payment-btn" onclick="confirmPaymentMethod()" disabled>
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <rect width="20" height="14" x="2" y="5" rx="2"/>
-    <path d="M2 10h20"/>
-  </svg>
-  ${T('confirm')}
-</button>
-      <button class="btn btn-g" onclick="showBalance(wristband)">
-        ${T('change_amount')}
-      </button>
-      <button class="btn btn-g" style="font-size:13px;min-height:44px;padding:11px" onclick="showIdle()">
-        ${T('cancel')}
-      </button>
-    </div>`;
-}
-
-// Variable global para método de pago seleccionado
-let paymentMethod = 'null'; // Sin selección por defecto - usuario debe elegir
-
-function selectPaymentMethod(method){
-  paymentMethod = method;
-  
-  const btnTerminal = document.getElementById('btn-terminal');
-  const btnOnline = document.getElementById('btn-online');
-  const info = document.getElementById('payment-method-info');
-  const confirmBtn = document.getElementById('confirm-payment-btn');
-  
-  // Habilitar botón de confirmar
-  if(confirmBtn) confirmBtn.disabled = false;
-  
-  if(method === 'terminal'){
-    btnTerminal.style.background = 'var(--a1)';
-    btnTerminal.style.color = '#000';
-    btnTerminal.style.borderColor = 'var(--a1)';
-    
-    btnOnline.style.background = 'var(--bg)';
-    btnOnline.style.color = 'var(--muted)';
-    btnOnline.style.borderColor = 'var(--border)';
-    
-    info.style.color = 'var(--muted)';
-    info.textContent = 'Acerca tu tarjeta al datáfono del kiosco';
-    
-  } else {
-    btnOnline.style.background = 'var(--a1)';
-    btnOnline.style.color = '#000';
-    btnOnline.style.borderColor = 'var(--a1)';
-    
-    btnTerminal.style.background = 'var(--bg)';
-    btnTerminal.style.color = 'var(--muted)';
-    btnTerminal.style.borderColor = 'var(--border)';
-    
-    info.style.color = 'var(--muted)';
-    info.textContent = 'Serás redirigido a Stripe para pagar de forma segura';
-  }
-}
-
-function confirmPaymentMethod(){
-  if(!paymentMethod){
-    toast('⚠️ Selecciona un método de pago', 'warn');
-    return;
-  }
-  
-  if(paymentMethod === 'terminal'){
-    startPaymentTerminal();
-  } else {
-    startPaymentOnline();
-  }
-}
-
-async function startPaymentTerminal(){
-  toast('⚠️ Datáfono no disponible aún. Usa pago online.', 'warn', 3000);
-  selectPaymentMethod('online');
-  setTimeout(() => startPaymentOnline(), 500);
-}
-
-async function startPaymentOnline(){
-  if(!wristband || selectedAmt <= 0) return;
-  
-  const confBtn = document.querySelector('#k-body .btn-p');
-  if(confBtn){ confBtn.disabled = true; confBtn.textContent = 'Procesando…'; }
-
-  if(!isOnline){
-    offlineQueue.push({
-      wristband_id: wristband.id, 
-      uid: wristband.uid, 
-      amount: selectedAmt, 
-      event_id: wristband.event_id, 
-      operator: 'Kiosco autoservicio ' + POS_ID, 
-      queued_at: new Date().toISOString()
-    });
-    localStorage.setItem('k_offline_q', JSON.stringify(offlineQueue));
-    logEvent('queued_offline', {uid: wristband.uid, amount: selectedAmt});
-    toast(T('offline_queue', {n: offlineQueue.length}), 'warn', 4000);
-    showIdle(); 
-    return;
-  }
-
-  try{
-    const res = await fetch(API_URL + '/api/stripe/topup', {
-      method: 'POST', 
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        wristband_id: wristband.id, 
-        uid: wristband.uid,
-        amount: selectedAmt, 
-        event_id: wristband.event_id,
-        operator: 'Kiosco autoservicio ' + POS_ID,
-        success_url: window.location.origin + '?stripe=success&session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: window.location.origin + '?stripe=cancel',
-      })
-    });
-    
-    const data = await res.json();
-    
-    if(data.error){ 
-      toast('Error: ' + data.error, 'err'); 
-      showSummary(); 
-      return; 
-    }
-
-    sessionStorage.setItem('k_stripe_session', data.session_id || '');
-    sessionStorage.setItem('k_wb_id', wristband.id);
-    sessionStorage.setItem('k_amount', String(selectedAmt));
-    sessionStorage.setItem('k_ref', data.reference || '');
-
-    showStripeCheckout(data.checkout_url, data.session_id);
-    
-  } catch(err){
-    console.error(err);
-    toast('Error de conexión. Inténtalo de nuevo.', 'err'); 
-    showSummary();
-  }
-}
-  
-// ══════════════════════════════════════════════════════════
-//  SCREEN 4 — PAGO
-// ══════════════════════════════════════════════════════════
-async function startPayment(){
-  if(!wristband || selectedAmt <= 0) return;
-  const confBtn = document.querySelector('#k-body .btn-p');
-  if(confBtn){ confBtn.disabled = true; confBtn.textContent = 'Procesando…'; }
-
-  if(!isOnline){
-    offlineQueue.push({wristband_id:wristband.id, uid:wristband.uid, amount:selectedAmt, event_id:wristband.event_id, operator:'Kiosco autoservicio '+POS_ID, queued_at:new Date().toISOString()});
-    localStorage.setItem('k_offline_q', JSON.stringify(offlineQueue));
-    logEvent('queued_offline', {uid:wristband.uid, amount:selectedAmt});
-    toast(T('offline_queue',{n:offlineQueue.length}), 'warn', 4000);
-    showIdle(); return;
-  }
-
-  try{
-    const res = await fetch(API_URL+'/api/stripe/topup', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        wristband_id: wristband.id, uid: wristband.uid,
-        amount: selectedAmt, event_id: wristband.event_id,
-        operator: 'Kiosco autoservicio '+POS_ID,
-        success_url: window.location.origin + '?stripe=success&session_id={CHECKOUT_SESSION_ID}',
-        cancel_url:  window.location.origin + '?stripe=cancel',
-      })
-    });
-    const data = await res.json();
-    if(data.error){ toast('Error: '+data.error, 'err'); showSummary(); return; }
-
-    sessionStorage.setItem('k_stripe_session', data.session_id||'');
-    sessionStorage.setItem('k_wb_id',   wristband.id);
-    sessionStorage.setItem('k_amount',  String(selectedAmt));
-    sessionStorage.setItem('k_ref',     data.reference||'');
-
-    showStripeCheckout(data.checkout_url, data.session_id);
-  }catch(err){
-    console.error(err);
-    toast('Error de conexión. Inténtalo de nuevo.', 'err'); showSummary();
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 5 — STRIPE EMBEBIDO
-// ══════════════════════════════════════════════════════════
-function showStripeCheckout(checkoutUrl, sessionId){
-  // Guardar sessionId ANTES de redirigir (ya se guardó en startPayment, pero por seguridad)
-  sessionStorage.setItem('k_stripe_session', sessionId);
-  
-  // Mostrar pantalla de transición
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'redirecting';
-  resetIdleTimer();
-  
-  body.innerHTML = `
-    <div style="text-align:center;width:100%;max-width:420px;padding:40px 20px;margin:0 auto">
-      <div class="spin" style="margin:0 auto 24px"></div>
-      <div style="font-family:Syne;font-size:26px;font-weight:800;margin-bottom:16px;color:var(--a1)">
-        ${T('redirecting') || 'Redirigiendo a pago seguro...'}
-      </div>
-      <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">
-        Serás redirigido a <strong>Stripe</strong> para completar el pago de forma segura.
-        <br><br>
-        <strong style="color:#fff">⚠️ No cierres esta ventana.</strong>
-      </div>
-      <div style="padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:24px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Resumen del pago:</div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:13px">Recarga:</span>
-          <span style="font-size:13px;font-weight:600">${fmt(selectedAmt)} €</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;color:var(--muted)">Comisión (${FEE_PCT}%):</span>
-          <span style="font-size:13px;color:var(--muted)">${fmt(calcFee(selectedAmt))} €</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)">
-          <span style="font-size:15px;font-weight:700">Total:</span>
-          <span style="font-size:18px;font-weight:800;color:var(--a1)">${fmt(selectedAmt + calcFee(selectedAmt))} €</span>
-        </div>
-      </div>
-      <button class="btn btn-danger" onclick="cancelPayment()">${T('cancel_payment') || 'Cancelar pago'}</button>
-    </div>`;
-  
-  // Redirigir a Stripe después de 1.5 segundos (dar tiempo a que el usuario lea)
-  setTimeout(() => {
-    console.log('🔄 Redirecting to Stripe Checkout:', checkoutUrl);
-    window.location.href = checkoutUrl;
-  }, 1500);
-}
-
-// Esta función ya no es necesaria con redirección completa, pero la dejamos por si acaso
-function onStripeMessage(event){
-  // No se usará con redirección completa, pero no genera error si existe
-  if(event.data && (event.data.type === 'payment_intent.succeeded' || event.data === 'stripe:checkout:complete')){
-    console.log('✅ Stripe message received (not used in redirect mode)');
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  🔧 FIX CRÍTICO: Pantalla de verificación
-// ══════════════════════════════════════════════════════════
-function showVerifyingScreen(){
-  const body = document.getElementById('k-body');
-  if(!body) return;
-  body.dataset.screen = 'verifying';
-  body.innerHTML = `
-    <div style="text-align:center;width:100%;max-width:380px;padding:20px 0">
-      <div class="spin"></div>
-      <div style="font-family:Syne;font-size:22px;font-weight:700;margin-bottom:12px">${T('complete_payment')}</div>
-      <div class="proc-status" id="k-status">${T('verifying')}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">${T('auto_check')}</div>
-      <div style="margin-top:22px;display:flex;flex-direction:column;gap:9px;max-width:320px;margin-left:auto;margin-right:auto">
-        <button class="btn btn-sup" onclick="checkStripePayment()">${T('verify_now')}</button>
-        <button class="btn btn-danger" onclick="cancelPayment()">${T('cancel_payment')}</button>
-      </div>
-    </div>`;
-}
-
-// ══════════════════════════════════════════════════════════
-//  🔧 FIX CRÍTICO: checkStripePayment
-// ══════════════════════════════════════════════════════════
-async function checkStripePayment(){
-  const sessionId = sessionStorage.getItem('k_stripe_session');
-  const wbId      = sessionStorage.getItem('k_wb_id');
-  const amount    = sessionStorage.getItem('k_amount');
-  const ref       = sessionStorage.getItem('k_ref');
-  console.log('💳 [checkStripePayment] sessionId:', sessionId);
-  console.log('💳 [checkStripePayment] wbId:', sessionStorage.getItem('k_wb_id'));
-  console.log('💳 [checkStripePayment] amount:', sessionStorage.getItem('k_amount'));
-  
-  console.log('[checkStripePayment] sessionId:', sessionId, 'wbId:', wbId, 'amount:', amount);
-  
-  if(!sessionId || !wbId) {
-    console.warn('[checkStripePayment] Missing session data');
-    return;
-  }
-
-  const el = document.getElementById('k-status');
-  if(el) el.innerHTML = T('verifying');
-
-  try{
-    const url = `${API_URL}/api/stripe/verify-topup?session_id=${sessionId}&wristband=${wbId}&amount=${amount}&ref=${ref||''}`;
-    console.log('📡 [checkStripePayment] Llamando a:', url);    
-    const res  = await fetch(url);
-    const data = await res.json();
-
-    console.log('📦 [checkStripePayment] Response status:', res.status);
-    console.log('📦 [checkStripePayment] Response data:', data);
-    
-    console.log('[checkStripePayment] Response:', data);
-
-    if(data.status === 'paid' || data.status === 'completed'){
-      console.log('✅ Payment SUCCESS');
-      clearInterval(checkInterval); checkInterval = null;
-      window.removeEventListener('message', onStripeMessage);
-
-      const a = parseFloat(amount);
-      todayStats.topups++; todayStats.amount += a;
-      todayStats.comm += calcFee(a); todayStats.last = new Date().toISOString();
-      saveStats();
-
-      const savedRef = ref || ('REF-'+Date.now());
-      clearSession();
-
-      // Recuperar wristband si no existe
-      if(!wristband){
-        try{
-          const {data:wb} = await _sb.from('rfid_wristbands').select('*').eq('id', wbId).maybeSingle();
-          if(wb) wristband = wb;
-          else wristband = { id: wbId, uid: 'UNKNOWN', holder_name: data.holder_name || null, email: null, balance: data.balance };
-        }catch(e){
-          console.warn('Could not recover wristband', e);
-          wristband = { id: wbId, uid: 'UNKNOWN', holder_name: data.holder_name || null, email: null, balance: data.balance };
-        }
-      }
-
-      logEvent('payment_success', {uid:wristband.uid, amount:a, new_balance:data.balance, provider:'stripe'});
-      showSuccess(a, data.balance, wristband.holder_name);
-
-    } else if(data.status === 'expired' || data.status === 'canceled'){
-      console.log('❌ Payment CANCELED/EXPIRED');
-      clearInterval(checkInterval); checkInterval = null;
-      window.removeEventListener('message', onStripeMessage);
-      clearSession();
-      toast('Pago cancelado o expirado.', 'warn');
-      showIdle();
-
-    } else {
-      // pending
-      console.log('⏳ Payment PENDING, status:', data.status);
-      const statusEl = document.getElementById('k-status');
-      if(statusEl){
-        statusEl.innerHTML = `⏳ Esperando confirmación…
-          <span style="font-size:11px;color:var(--muted);display:block;margin-top:4px">${T('auto_check')}</span>`;
-      } else {
-        console.warn('[checkStripePayment] #k-status not found, regenerating screen');
-        showVerifyingScreen();
-      }
-    }
-  }catch(e){
-    console.error('[checkStripePayment] Error:', e);
-    const statusEl = document.getElementById('k-status');
-    if(statusEl) statusEl.textContent = '⚠️ Error al verificar. Reintenta.';
-    else {
-      console.warn('[checkStripePayment] #k-status not found after error, regenerating screen');
-      showVerifyingScreen();
-    }
-  }
-}
-
-async function checkPayment(){ await checkStripePayment(); }
-
-function cancelPayment(){
-  clearInterval(checkInterval); checkInterval = null;
-  window.removeEventListener('message', onStripeMessage);
-  clearSession(); toast(T('cancel'), 'warn'); showIdle();
-}
-
-function clearSession(){
-  ['k_stripe_session','k_wb_id','k_amount','k_ref'].forEach(k => sessionStorage.removeItem(k));
-}
-
-// ══════════════════════════════════════════════════════════
-//  🔧 FIX CRÍTICO: checkResume — PUNTO CLAVE DEL BUG
-// ══════════════════════════════════════════════════════════
-async function checkResume(){
-  const params        = new URLSearchParams(window.location.search);
-  console.log('🔍 [checkResume] URL params:', window.location.search);
-  console.log('🔍 [checkResume] stripe param:', params.get('stripe'));
-  console.log('🔍 [checkResume] session_id param:', params.get('session_id'));
-  const stripeResult  = params.get('stripe');
-  const stripeSession = params.get('session_id') || sessionStorage.getItem('k_stripe_session');
-
-  console.log('[checkResume] stripeResult:', stripeResult, 'stripeSession:', stripeSession);
-
-  // ── Caso 1: ?stripe=success ──
-  if(stripeResult === 'success' && stripeSession){
-    console.log('🔄 Resume: stripe=success detected');
-    window.history.replaceState({}, '', window.location.pathname);
-
-    const wbId   = sessionStorage.getItem('k_wb_id');
-    const amount = sessionStorage.getItem('k_amount');
-    sessionStorage.setItem('k_stripe_session', stripeSession);
-
-    // Recuperar wristband si existe en sessionStorage
-    if(wbId){
-      try{
-        const {data:wb} = await _sb.from('rfid_wristbands').select('*').eq('id', wbId).maybeSingle();
-        if(wb){ 
-          wristband = wb; 
-          selectedAmt = parseFloat(amount||'0'); 
-          console.log('✅ Wristband recovered:', wristband.uid);
-        }
-      }catch(e){ 
-        console.warn('[checkResume] Could not recover wristband:', e); 
-      }
-    }
-
-    // 🔧 FIX: MOSTRAR PANTALLA PRIMERO, ANTES DE LLAMAR AL API
-    console.log('📺 Showing verifying screen BEFORE API call');
-    showVerifyingScreen();
-    
-    // Ahora sí, verificar el pago
-    console.log('🔍 Calling checkStripePayment...');
-    await checkStripePayment();
-
-    // Si tras la primera verificación aún está pending, iniciar intervalo
-    if(checkInterval === null && document.getElementById('k-body')?.dataset.screen === 'verifying'){
-      console.log('⏱️ Starting check interval (every 4s)');
-      checkInterval = setInterval(checkStripePayment, 4000);
-    }
-    return true;
-  }
-
-  // ── Caso 2: ?stripe=cancel ──
-  if(stripeResult === 'cancel'){
-    console.log('❌ Resume: stripe=cancel detected');
-    window.history.replaceState({}, '', window.location.pathname);
-    clearSession();
-    toast('Pago cancelado.', 'warn');
-    return false;
-  }
-
-  // ── Caso 3: NO verificar sesiones viejas ──
-  // Si no hay query params de Stripe, limpiar cualquier sesión antigua y continuar normal
-  console.log('🧹 No stripe params in URL, clearing any old session data');
-  
-  // Limpiar intervalos activos
-  if(checkInterval !== null){
-    console.log('🧹 Clearing active checkInterval');
-    clearInterval(checkInterval);
-    checkInterval = null;
-  }
-  
-  // Limpiar event listeners
-  window.removeEventListener('message', onStripeMessage);
-  
-  // Limpiar sessionStorage
-  clearSession();
-  
-  return false;
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 6 — ÉXITO + QR
-// ══════════════════════════════════════════════════════════
-function showSuccess(amount, newBalance, name){
-  console.log('✅ [showSuccess] Mostrando pantalla de éxito');
-  console.log('✅ [showSuccess] amount:', amount, 'newBalance:', newBalance);
-  if(navigator.vibrate) navigator.vibrate([100,60,100]);
-  const ref = sessionStorage.getItem('k_ref') || ('REF-'+Date.now());
-  const qrData = JSON.stringify({ref, uid:wristband?.uid||'', amount, newBalance, ts:new Date().toISOString(), pos:POS_ID});
-
-  const overlay = document.createElement('div');
-  overlay.className = 'success-overlay';
-  overlay.innerHTML = `
-    <div class="success-box">
-      <span class="success-emoji">✅</span>
-      <div class="success-title">${T('success_title')}</div>
-      <div class="success-new">+${fmt(amount)} €</div>
-      <div class="success-sub">${T('new_balance')} <strong style="color:var(--a1);font-family:Syne">${fmt(newBalance)} €</strong></div>
-      ${name ? `<div style="font-size:13px;color:var(--muted);margin-top:5px">${name}</div>` : ''}
-      <div class="qr-wrap"><canvas id="qr-canvas"></canvas></div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px">Ref: ${ref}</div>
-      ${wristband?.email
-        ? `<button class="btn btn-g" style="margin-top:10px;max-width:280px;font-size:13px;padding:10px" onclick="sendReceipt('${ref}',${amount},${newBalance},'${wristband.email}')">📧 Enviar recibo al email</button>`
-        : `<div style="font-size:12px;color:var(--muted);margin-top:10px">${T('no_email')}</div>`}
-      <div class="success-count" id="scd">${T('back_soon',{n:5})}</div>
-      <button class="btn btn-p" style="margin-top:16px;max-width:280px" onclick="this.closest('.success-overlay').remove();showIdle()">${T('back_now')}</button>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  setTimeout(() => {
-    const canvas = document.getElementById('qr-canvas');
-    if(canvas && window.QRCode) QRCode.toCanvas(canvas, qrData, {width:144,margin:1,color:{dark:'#000',light:'#fff'}}, ()=>{});
-  }, 100);
-
-  let secs = 5;
-  const ticker = setInterval(() => {
-    secs--;
-    const el = document.getElementById('scd');
-    if(el) el.textContent = T('back_soon',{n:secs});
-    if(secs <= 0){ clearInterval(ticker); overlay.remove(); showIdle(); }
-  }, 1000);
-}
-
-async function sendReceipt(ref, amount, newBalance, email){
-  const btn = event.target;
-  btn.disabled = true; btn.textContent = 'Enviando…';
-  try{
-    const fee = calcFee(amount);
-    await fetch(API_URL+'/api/rfid/receipt', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, ref, amount, fee, total:amount+fee, new_balance:newBalance, uid:wristband?.uid, holder:wristband?.holder_name, pos:POS_ID, ts:new Date().toISOString()})});
-    toast(T('receipt_sent'), 'ok');
-    btn.textContent = '✅ Enviado';
-  }catch(e){ toast(T('receipt_error'), 'err'); btn.disabled = false; btn.textContent = '📧 Reintentar'; }
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 7 — HISTORIAL
-// ══════════════════════════════════════════════════════════
-async function showHistory(){
-  if(!wristband) return;
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'history'; resetIdleTimer();
-  body.innerHTML = `
-    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="font-family:Syne;font-weight:700;font-size:18px">${T('history_title')}</div>
-      <div style="text-align:right">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">${T('current_balance')}</div>
-        <div style="font-family:Syne;font-weight:800;font-size:20px;color:var(--a1)">${fmt(wristband.balance)} €</div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:monospace">${wristband.uid}</div>
-    <div id="tx-list" class="tx-list"><div style="text-align:center;color:var(--muted);font-size:14px;padding:26px">Cargando…</div></div>
-    <button class="btn btn-g" style="margin-top:11px;font-size:13px;min-height:44px;padding:11px" onclick="showBalance(wristband)">${T('back_profile')}</button>`;
-  try{
-    const {data:txs} = await _sb.from('rfid_transactions').select('*').eq('wristband_id', wristband.id).order('created_at',{ascending:false}).limit(30);
-    const list = document.getElementById('tx-list'); if(!list) return;
-    if(!txs||!txs.length){ list.innerHTML=`<div style="text-align:center;color:var(--muted);font-size:14px;padding:26px">${T('no_txs')}</div>`; return; }
-    list.innerHTML = txs.map(tx => {
-      const isIn = tx.amount > 0;
-      return `<div class="tx-item"><div class="tx-icon ${isIn?'in':'out'}">${isIn?'⬆️':'⬇️'}</div><div class="tx-info"><div class="tx-concept">${tx.description||(isIn?T('recharge_cashless'):T('consumption'))}</div><div class="tx-date">${fmtDate(tx.created_at)}</div></div><div class="tx-amount ${isIn?'in':'out'}">${isIn?'+':''}${fmt(tx.amount)} €</div></div>`;
-    }).join('');
-  }catch(e){
-    const list = document.getElementById('tx-list');
-    if(list) list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:26px">Error al cargar movimientos.</div>';
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  FUERA DE SERVICIO
-// ══════════════════════════════════════════════════════════
-function showOOS(){
-  const sc = document.getElementById('oos-screen');
-  document.getElementById('oos-msg').textContent = oosMsg || 'Este kiosco no está disponible. Por favor, dirígete al personal del evento.';
-  document.getElementById('oos-footer').textContent = 'InOut Kiosk · '+POS_ID;
-  sc.style.display = 'flex';
-}
-
-function toggleOOS(msg=''){
-  oosActive = !oosActive; oosMsg = msg;
-  localStorage.setItem('k_oos', JSON.stringify(oosActive));
-  localStorage.setItem('k_oos_msg', msg);
-  logEvent(oosActive ? 'oos_on' : 'oos_off', {msg});
-  if(oosActive) showOOS();
-  else{ document.getElementById('oos-screen').style.display = 'none'; showIdle(); }
-}
-
-// ══════════════════════════════════════════════════════════
-//  SUPERVISOR — PIN
-// ══════════════════════════════════════════════════════════
-let supTapCount = 0;
-function supTapStart(){ supTapTimer = setTimeout(() => { supTapCount = 0; openPIN('supervisor', () => showSupervisor()); }, 800); }
-function supTapEnd(){ clearTimeout(supTapTimer); }
-
-function openPIN(context, callback){
-  pinBuffer = ''; pinCallback = callback;
-  document.getElementById('pin-title').textContent = context === 'supervisor' ? 'Acceso supervisor' : 'PIN requerido';
-  updatePINDots();
-  document.getElementById('pin-overlay').style.display = 'flex';
-}
-
-function closePIN(){
-  pinBuffer = '';
-  document.getElementById('pin-overlay').style.display = 'none';
-}
-
-function pinKey(k){
-  if(k === '⌫'){ pinBuffer = pinBuffer.slice(0,-1); }
-  else if(k === ''){ return; }
-  else if(pinBuffer.length < 4){ pinBuffer += k; }
-  updatePINDots();
-  if(pinBuffer.length === 4){
-    setTimeout(() => {
-      if(pinBuffer === SUP_PIN){ closePIN(); if(pinCallback) pinCallback(); }
-      else{
-        pinBuffer = ''; updatePINDots();
-        const box = document.querySelector('.pin-box');
-        box.style.animation = 'none'; box.offsetHeight;
-        box.style.animation = 'pin-shake .3s ease';
-        toast('PIN incorrecto', 'err');
-      }
-    }, 200);
-  }
-}
-
-function updatePINDots(){
-  for(let i = 0; i < 4; i++){
-    const d = document.getElementById('pd'+i);
-    if(d) d.className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  SCREEN 8 — SUPERVISOR
-// ══════════════════════════════════════════════════════════
-function showSupervisor(){
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'supervisor'; resetIdleTimer();
-  const avg = todayStats.topups > 0 ? todayStats.amount / todayStats.topups : 0;
-  body.innerHTML = `
-    <div style="font-family:Syne;font-weight:800;font-size:20px;text-align:center;color:var(--a3);margin-bottom:4px">⚙️ ${T('supervisor')}</div>
-    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px">${POS_ID} · ${new Date().toLocaleDateString('es-ES')}</div>
-    <div class="sup-grid">
-      <div class="sup-stat wide"><div class="s-val">${fmt(todayStats.amount)} €</div><div class="s-label">${T('today_amount')}</div></div>
-      <div class="sup-stat"><div class="s-val">${todayStats.topups}</div><div class="s-label">${T('today_topups')}</div></div>
-      <div class="sup-stat"><div class="s-val">${fmt(todayStats.comm)} €</div><div class="s-label">${T('today_comm')}</div></div>
-      <div class="sup-stat"><div class="s-val">${avg>0?fmt(avg)+' €':'—'}</div><div class="s-label">${T('avg_topup')}</div></div>
-      <div class="sup-stat"><div class="s-val">${offlineQueue.length}</div><div class="s-label">${T('offline_ops')}</div></div>
-      <div class="sup-stat wide" style="font-size:12px;color:var(--muted);padding:12px">
-        <div>${T('last_topup')}: ${todayStats.last?fmtDate(todayStats.last):T('never')}</div>
-        <div style="margin-top:4px">Auto-refresh: ${String(AUTO_REFRESH_HOUR).padStart(2,'0')}:00 AM</div>
-      </div>
-    </div>
-    <div style="width:100%;display:flex;flex-direction:column;gap:9px;margin-top:14px">
-      <button class="btn ${oosActive?'btn-p':'btn-danger'}" onclick="promptOOS()">${oosActive?T('oos_off'):T('oos_on')}</button>
-      ${offlineQueue.length ? `<button class="btn btn-sup" onclick="flushOfflineQueue()">⚡ Sincronizar ${offlineQueue.length} op(s) offline</button>` : ''}
-      <button class="btn btn-g" style="font-size:13px;padding:11px" onclick="showIdle()">← ${T('back')}</button>
-    </div>`;
-}
-
-function promptOOS(){
-  if(oosActive){ toggleOOS(); return; }
-  const msg = window.prompt('Mensaje para mostrar en pantalla (opcional):', 'Este kiosco no está disponible momentáneamente.');
-  if(msg !== null) toggleOOS(msg||'');
-}
-
-// ══════════════════════════════════════════════════════════
-//  TRAZABILIDAD
-// ══════════════════════════════════════════════════════════
-function logEvent(event, data={}){
-  const entry = {ts:new Date().toISOString(), pos:POS_ID, event, ...data};
-  const logs = JSON.parse(sessionStorage.getItem('kiosk_logs')||'[]');
-  logs.push(entry); if(logs.length > 400) logs.shift();
-  sessionStorage.setItem('kiosk_logs', JSON.stringify(logs));
-  fetch(API_URL+'/api/rfid/log', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(entry)}).catch(()=>{});
-}
-
-function scheduleDailyReport(){
-  const now = new Date(), target = new Date(now);
-  target.setHours(23,59,0,0); if(now >= target) target.setDate(target.getDate()+1);
-  setTimeout(function run(){
-    const today = new Date().toISOString().split('T')[0];
-    const logs = JSON.parse(sessionStorage.getItem('kiosk_logs')||'[]');
-    fetch(API_URL+'/api/rfid/daily-report', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pos_id:POS_ID, date:today, logs:logs.filter(l=>l.ts.startsWith(today)), ...todayStats})}).catch(()=>{});
-    setTimeout(run, 24*60*60*1000);
-  }, target - now);
-}
-
-function scheduleBackup(){
-  setInterval(() => {
-    const logs = JSON.parse(sessionStorage.getItem('kiosk_logs')||'[]');
-    fetch(API_URL+'/api/rfid/backup', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pos_id:POS_ID, ts:new Date().toISOString(), logs, stats:todayStats})}).catch(()=>{});
-  }, 15*60*1000);
-}
-
-// ══════════════════════════════════════════════════════════
-//  🚀 INIT
-// ══════════════════════════════════════════════════════════
-(async function init(){
-  console.log('🚀 InOut Kiosk V3.2.6-FIXED initializing...');
-  renderLangRow();
-  startClock();
-  scheduleDailyReport();
-  scheduleBackup();
-  await initNFC();
-  if(!isOnline) document.getElementById('offline-badge').classList.add('visible');
-  document.addEventListener('touchstart', resetIdleTimer, {passive:true});
-  document.addEventListener('click', resetIdleTimer);
-  
-  // Detener cualquier intervalo activo ANTES de verificar
-  if(checkInterval !== null){
-    console.log('🧹 Clearing checkInterval before resume check');
-    clearInterval(checkInterval);
-    checkInterval = null;
-  }
-  
-  console.log('🔍 Checking for resume...');
-  const resumed = await checkResume();
-  console.log('✅ Resume check done, resumed:', resumed);
-  
-  if(!resumed){
-    if(oosActive) showOOS();
-    else showIdle();
-  }
-  if(isOnline && offlineQueue.length) flushOfflineQueue();
-  console.log('✅ Init complete');
-})();
-</script>
-
-<script>
-// ═══════════════════════════════════════════════════════════════
-//  REGISTER INITIALIZATION WRAPPER  
-// ═══════════════════════════════════════════════════════════════
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="theme-color" content="#07070f"/>
-  <title>InOut · Registro de Pulsera</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-    :root{
-      --bg:#07070f;--surf:#0d0d1a;--card:#111120;--border:#1c1c2e;
-      --a1:#c8ff00;--a2:#ff3cac;--a3:#00d4ff;
-      --txt:#e6e6f0;--muted:#60607a;
-      --success:#00e676;--danger:#ff1744;--warn:#ffab00;
-      --r:16px;--r-sm:12px;
-    }
-    html,body{height:100%;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--txt);background:var(--bg);overflow:hidden;touch-action:manipulation;user-select:none;-webkit-font-smoothing:antialiased;}
-
-    .kiosk{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:600px;margin:0 auto;padding:16px 20px;position:relative;}
-    .kiosk::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(0,212,255,.05) 0%,transparent 70%);pointer-events:none;z-index:0;}
-
-    .k-header{text-align:center;padding:8px 0;flex-shrink:0;position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;}
-    .k-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.5px;flex:1;text-align:center;}
-    .k-logo .hi{color:var(--a1);}
-    .k-logo small{display:block;font-family:'DM Sans',sans-serif;font-weight:400;font-size:10px;color:var(--a3);text-transform:uppercase;letter-spacing:2.5px;margin-top:2px;}
-
-    .k-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow-y:auto;padding:8px 0 60px;position:relative;z-index:1;}
-
-    .k-footer{text-align:center;padding:6px 0;flex-shrink:0;font-size:10px;color:var(--muted);position:relative;z-index:1;}
-
-    /* Steps */
-    .steps-bar{display:flex;gap:6px;margin-bottom:20px;width:100%;max-width:400px;}
-    .step-dot{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background .3s;}
-    .step-dot.done{background:var(--a1);}
-    .step-dot.active{background:var(--a3);animation:pulse-bar 1.5s ease-in-out infinite;}
-    @keyframes pulse-bar{0%,100%{opacity:1;}50%{opacity:.5;}}
-
-    /* QR scanner area */
-    .scan-area{width:240px;height:240px;border-radius:20px;border:2px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto;overflow:hidden;}
-    .scan-area.active{border-color:var(--a3);box-shadow:0 0 0 4px rgba(0,212,255,.1);}
-    .scan-area.ok{border-color:var(--a1);box-shadow:0 0 0 4px rgba(200,255,0,.12);}
-    .scan-area.err{border-color:var(--danger);box-shadow:0 0 0 4px rgba(255,23,68,.12);}
-    .scan-corner{position:absolute;width:20px;height:20px;border-color:currentColor;border-style:solid;}
-    .scan-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
-    .scan-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
-    .scan-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
-    .scan-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
-    .scan-line{position:absolute;width:80%;height:2px;background:linear-gradient(to right,transparent,var(--a3),transparent);animation:scan 2s ease-in-out infinite;opacity:.8;}
-    @keyframes scan{0%{top:20%;}100%{top:80%;}}
-
-    /* NFC ring */
-    .nfc-ring{width:160px;height:160px;border-radius:50%;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;}
-    .nfc-ring.scanning{border-color:var(--a3);color:var(--a3);animation:ring-pulse 2s ease-in-out infinite;}
-    .nfc-ring.ok{border-color:var(--a1);color:var(--a1);}
-    .nfc-ring.err{border-color:var(--danger);color:var(--danger);}
-    .nfc-ring::before{content:'';position:absolute;width:192px;height:192px;border-radius:50%;border:1.5px solid currentColor;opacity:0;}
-    .nfc-ring.scanning::before{animation:ring-expand 2s ease-in-out infinite;}
-    @keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,.25);}50%{box-shadow:0 0 0 16px rgba(0,212,255,0);}}
-    @keyframes ring-expand{0%{opacity:.3;transform:scale(.85);}100%{opacity:0;transform:scale(1.1);}}
-    .nfc-emoji{font-size:54px;line-height:1;display:block;text-align:center;}
-
-    /* Cards */
-    .info-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;width:100%;margin-bottom:12px;}
-    .info-card.success{border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.05);}
-    .info-card.danger{border-color:rgba(255,23,68,.3);background:rgba(255,23,68,.05);}
-    .info-card.warn{border-color:rgba(255,171,0,.3);background:rgba(255,171,0,.05);}
-
-    .ticket-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--a1);margin:4px 0;}
-    .ticket-event{font-size:14px;color:var(--muted);margin-bottom:12px;}
-    .ticket-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);}
-    .ticket-row:last-child{border-bottom:none;}
-    .ticket-lbl{color:var(--muted);}
-
-    /* Buttons */
-    .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 24px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;transition:opacity .12s,transform .1s;width:100%;min-height:52px;}
-    .btn:active{transform:scale(.96);opacity:.8;}
-    .btn:disabled{opacity:.4;pointer-events:none;}
-    .btn-p{background:var(--a1);color:#000;}
-    .btn-g{background:transparent;color:var(--muted);border:1px solid var(--border);}
-    .btn-danger{background:rgba(255,23,68,.1);color:var(--danger);border:1px solid rgba(255,23,68,.2);}
-
-    .k-title{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;text-align:center;margin-top:14px;line-height:1.2;}
-    .k-sub{color:var(--muted);font-size:14px;text-align:center;margin-top:6px;line-height:1.5;max-width:360px;}
-
-    /* Input */
-    .form-input{width:100%;padding:14px 16px;border-radius:var(--r-sm);background:var(--surf);border:2px solid var(--border);color:var(--txt);font-size:18px;font-family:monospace;text-align:center;letter-spacing:2px;outline:none;transition:border-color .15s;-webkit-text-fill-color:var(--txt);}
-    .form-input:focus{border-color:var(--a3);}
-
-    /* Success overlay */
-    .success-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,40,10,.95);backdrop-filter:blur(6px);animation:fadeIn .25s ease;padding:24px;}
-    .success-box{text-align:center;width:100%;max-width:380px;}
-    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-
-    /* Status bar */
-    .k-status{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:5px 16px 7px;font-size:10px;color:var(--muted);background:linear-gradient(to top,var(--bg) 60%,transparent);z-index:10;pointer-events:none;}
-    .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--a3);margin-right:5px;animation:blink 2s ease-in-out infinite;}
-    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
-
-    /* Toast */
-    #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border);border-radius:100px;padding:12px 22px;font-size:13px;z-index:1000;transition:transform .3s cubic-bezier(.4,0,.2,1);white-space:nowrap;pointer-events:none;}
-    #toast.show{transform:translateX(-50%) translateY(0);}
-    #toast.err{border-color:rgba(255,23,68,.4);color:var(--danger);}
-    #toast.ok{border-color:rgba(0,230,118,.4);color:var(--success);}
-    #toast.warn{border-color:rgba(255,171,0,.4);color:var(--warn);}
-
-    /* Event selector */
-    .ev-btn{padding:14px 16px;background:var(--card);border:2px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all .15s;width:100%;text-align:left;margin-bottom:8px;}
-    .ev-btn:hover,.ev-btn:active{border-color:var(--a3);background:rgba(0,212,255,.05);}
-    .ev-btn.selected{border-color:var(--a1);background:rgba(200,255,0,.06);}
-    .ev-nombre{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;}
-    .ev-meta{font-size:12px;color:var(--muted);margin-top:3px;}
-
-    @media(max-height:680px){
-      .scan-area{width:180px;height:180px;}
-      .nfc-ring{width:120px;height:120px;}
-      .nfc-emoji{font-size:40px;}
-      .k-title{font-size:18px;}
-    }
-  </style>
-</head>
-<body>
-<div id="toast"></div>
-
-<!-- PIN overlay -->
-<div id="pin-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;width:100%;max-width:320px;text-align:center">
-    <div style="font-family:Syne,sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">Acceso de admin</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Introduce el PIN para continuar</div>
-    <div style="display:flex;gap:12px;justify-content:center;margin:16px 0" id="pin-dots">
-      <div id="pd0" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-      <div id="pd1" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-      <div id="pd2" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-      <div id="pd3" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px" id="pin-pad">
-      <div onclick="pinKey('1')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">1</div>
-      <div onclick="pinKey('2')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">2</div>
-      <div onclick="pinKey('3')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">3</div>
-      <div onclick="pinKey('4')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">4</div>
-      <div onclick="pinKey('5')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">5</div>
-      <div onclick="pinKey('6')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">6</div>
-      <div onclick="pinKey('7')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">7</div>
-      <div onclick="pinKey('8')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">8</div>
-      <div onclick="pinKey('9')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">9</div>
-      <div style="padding:18px;opacity:.2">　</div>
-      <div onclick="pinKey('0')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">0</div>
-      <div onclick="pinKey('⌫')" style="padding:18px;border-radius:var(--r-sm);background:var(--surf);border:1px solid var(--border);font-family:Syne,sans-serif;font-size:22px;font-weight:700;cursor:pointer;transition:background .1s">⌫</div>
-    </div>
-    <button onclick="closePIN()" style="margin-top:14px;width:100%;padding:10px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">Cancelar</button>
-  </div>
-</div>
-
-<div class="kiosk">
-  <div class="k-header">
-    <div style="width:40px"></div>
-    <div class="k-logo">in<span class="hi">out</span><small id="logo-sub">Registro · Enlace de pulsera</small></div>
-    <div style="width:40px;display:flex;justify-content:flex-end">
-      <div id="settings-btn" style="cursor:pointer;font-size:18px;color:var(--muted)" onclick="openSettings()" title="Configuración">⚙️</div>
-    </div>
-  </div>
-  <div class="k-body" id="k-body"></div>
-  <div class="k-footer" id="k-footer">InOut Media · Sistema de registro de pulseras</div>
-</div>
-
-<div class="k-status">
-  <span><span class="dot"></span>InOut Register v1.0</span>
-  <span id="k-time">—</span>
-  <span id="k-nfc-status">NFC: —</span>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════════════
-//  MÓDULO PIN DE DISPOSITIVO — se inyecta en Staff/Register/Kiosk/Valid
-//  PIN se pide UNA sola vez por sesión de app (hasta cerrar pestaña)
-//  Se guarda en sessionStorage (se borra al cerrar) NO en localStorage
-// ══════════════════════════════════════════════════════════════════
-const DEVICE_PIN = '1234'; // ← cambiar en producción
-const _DEVICE_PIN_KEY = 'inout_device_unlocked';
-
-function isDeviceUnlocked(){
-  return sessionStorage.getItem(_DEVICE_PIN_KEY) === 'yes';
-}
-
-function lockDevice(){
-  sessionStorage.removeItem(_DEVICE_PIN_KEY);
-}
-
-// Muestra la pantalla de PIN bloqueando toda la UI hasta que sea correcto
-// onUnlock: función a llamar cuando el PIN sea correcto
-function showDeviceLockScreen(appName, appIcon, onUnlock){
-  // Si ya está desbloqueado, ir directo
-  if(isDeviceUnlocked()){ onUnlock(); return; }
-
-  let _buf = '';
-  const overlay = document.createElement('div');
-  overlay.id = 'device-lock-overlay';
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:9999;
-    background:var(--bg,#07070f);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:0;padding:24px;font-family:'DM Sans',sans-serif;
-  `;
-  overlay.innerHTML = `
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:52px;margin-bottom:10px">${appIcon}</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#e6e6f0">
-        InOut<span style="color:#c8ff00">.</span>
-      </div>
-      <div style="font-size:11px;color:#60607a;text-transform:uppercase;letter-spacing:2px;margin-top:3px">${appName}</div>
-    </div>
-    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:#e6e6f0;margin-bottom:4px">PIN de dispositivo</div>
-    <div style="font-size:13px;color:#60607a;margin-bottom:20px">Introduce el PIN para desbloquear</div>
-    <div id="dl-dots" style="display:flex;gap:14px;justify-content:center;margin-bottom:24px">
-      ${[0,1,2,3].map(i=>`<div id="dld${i}" style="width:14px;height:14px;border-radius:50%;border:2px solid #1c1c2e;transition:all .15s"></div>`).join('')}
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px">
-      ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>
-        k===''
-        ? '<div></div>'
-        : `<div id="dlk-${k}" style="padding:18px;border-radius:14px;background:#0d0d1a;border:1px solid #1c1c2e;
-               font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:#e6e6f0;
-               text-align:center;cursor:pointer;user-select:none;transition:background .1s" 
-               onclick="dlKey('${k}')">${k}</div>`
-      ).join('')}
-    </div>
-    <div id="dl-err" style="height:18px;margin-top:14px;font-size:13px;color:#ff1744;text-align:center"></div>
-  `;
-  document.body.appendChild(overlay);
-
-  window.dlKey = function(k){
-    if(k==='⌫'){ _buf=_buf.slice(0,-1); }
-    else if(_buf.length<4){ _buf+=k; }
-    // Actualizar dots
-    for(let i=0;i<4;i++){
-      const d=document.getElementById('dld'+i);
-      if(d){ d.style.background=i<_buf.length?'#c8ff00':'transparent'; d.style.borderColor=i<_buf.length?'#c8ff00':'#1c1c2e'; }
-    }
-    if(_buf.length===4){
-      setTimeout(()=>{
-        if(_buf===DEVICE_PIN){
-          sessionStorage.setItem(_DEVICE_PIN_KEY,'yes');
-          overlay.style.transition='opacity .3s';
-          overlay.style.opacity='0';
-          setTimeout(()=>{ overlay.remove(); delete window.dlKey; onUnlock(); }, 300);
-        } else {
-          _buf='';
-          for(let i=0;i<4;i++){const d=document.getElementById('dld'+i);if(d){d.style.background='transparent';d.style.borderColor='#ff1744';}}
-          document.getElementById('dl-err').textContent='PIN incorrecto';
-          // Shake
-          overlay.style.transition='transform .08s';
-          overlay.style.transform='translateX(10px)';
-          setTimeout(()=>overlay.style.transform='translateX(-10px)',80);
-          setTimeout(()=>overlay.style.transform='translateX(5px)',160);
-          setTimeout(()=>{overlay.style.transform='translateX(0)';for(let i=0;i<4;i++){const d=document.getElementById('dld'+i);if(d)d.style.borderColor='#1c1c2e';}},240);
-          setTimeout(()=>document.getElementById('dl-err').textContent='',2000);
-        }
-      },150);
-    }
-  };
-}
-
-// ══════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════
-const SB_URL   = 'https://raoxkjnwrccoxjcipfpv.supabase.co';
-const SB_KEY   = 'sb_publishable__-K1pC4bOJHRf8JQ__OOzg_jqLxlGla';
-const _sb      = supabase.createClient(SB_URL, SB_KEY);
-
-// ══════════════════════════════════════════════════
-//  CONFIG PIN ADMIN
-// ══════════════════════════════════════════════════
-const ADMIN_PIN = '1234'; // ← cambiar en producción (mismo que kiosco)
-
-// ══════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════
-let activeEvent    = null;   // evento activo seleccionado
-let nfcReader      = null;
-let nfcSupported   = false;
-let currentTicket  = null;   // ticket validado en paso 1
-let idleTimer      = null;
-
-// Persistir evento activo
-const savedEventId = localStorage.getItem('reg_event_id');
-const savedEventName = localStorage.getItem('reg_event_name');
-if(savedEventId) activeEvent = {id: savedEventId, nombre: savedEventName};
-
-// ══════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════
-let _toastTimer = null;
-function toast(msg, type='', ms=3000){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show' + (type?' '+type:'');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), ms);
-}
-
-function resetIdle(){
-  clearTimeout(idleTimer);
-  const body = document.getElementById('k-body');
-  if(!body || body.dataset.screen === 'idle') return;
-  idleTimer = setTimeout(() => { showIdle(); }, 90_000); // 90s sin actividad
-}
-
-function startClock(){
-  const tick = () => { const el=document.getElementById('k-time'); if(el) el.textContent=new Date().toLocaleTimeString('es-ES'); };
-  tick(); setInterval(tick, 1000);
-}
-
-// ══════════════════════════════════════════════════
-//  PIN ADMIN
-// ══════════════════════════════════════════════════
-let _pinBuffer   = '';
-let _pinCallback = null;
-
-function openPIN(callback){
-  _pinBuffer   = '';
-  _pinCallback = callback;
-  updatePINDots();
-  const overlay = document.getElementById('pin-overlay');
-  overlay.style.display = 'flex';
-}
-
-function closePIN(){
-  _pinBuffer = '';
-  document.getElementById('pin-overlay').style.display = 'none';
-  updatePINDots();
-}
-
-function pinKey(k){
-  if(k === '⌫'){ _pinBuffer = _pinBuffer.slice(0, -1); }
-  else if(_pinBuffer.length < 4){ _pinBuffer += k; }
-  updatePINDots();
-
-  if(_pinBuffer.length === 4){
-    setTimeout(() => {
-      if(_pinBuffer === ADMIN_PIN){
-        closePIN();
-        if(_pinCallback) _pinCallback();
-      } else {
-        _pinBuffer = '';
-        updatePINDots();
-        // Shake visual
-        const box = document.querySelector('#pin-overlay > div');
-        if(box){
-          box.style.transition = 'transform .1s';
-          box.style.transform = 'translateX(8px)';
-          setTimeout(() => { box.style.transform = 'translateX(-8px)'; }, 100);
-          setTimeout(() => { box.style.transform = 'translateX(4px)'; },  200);
-          setTimeout(() => { box.style.transform = 'translateX(0)'; },    300);
-        }
-        toast('PIN incorrecto', 'err');
-      }
-    }, 150);
-  }
-}
-
-function updatePINDots(){
-  for(let i = 0; i < 4; i++){
-    const d = document.getElementById('pd'+i);
-    if(!d) continue;
-    if(i < _pinBuffer.length){
-      d.style.background    = 'var(--a1)';
-      d.style.borderColor   = 'var(--a1)';
-    } else {
-      d.style.background    = 'transparent';
-      d.style.borderColor   = 'var(--border)';
-    }
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  NFC INIT
-// ══════════════════════════════════════════════════
-async function initNFC(){
-  const el = document.getElementById('k-nfc-status');
-  // App Android bridge
-  if(window.ANDROID_KIOSK){
-    window.onAndroidNFCScan = (uid) => { if(uid && uid.length >= 4) onNFCScan(uid.toUpperCase()); };
-    nfcSupported = window.ANDROID_NFC === true;
-    if(el){ el.textContent = nfcSupported ? 'NFC: Activo (App)' : 'NFC: App sin NFC'; }
-    return;
-  }
-  if(!('NDEFReader' in window)){
-    if(el) el.textContent = 'NFC: No disponible';
-    return;
-  }
-  nfcSupported = true;
-  if(el){ el.textContent = 'NFC: Activo'; el.style.color = 'var(--a1)'; }
-  try{
-    nfcReader = new NDEFReader();
-    await nfcReader.scan();
-    nfcReader.onreading = ev => onNFCScan(ev.serialNumber.replace(/:/g,'').toUpperCase());
-    nfcReader.onreadingerror = () => toast('Error leyendo NFC','err');
-  }catch(e){
-    nfcSupported = false;
-    if(el) el.textContent = 'NFC: Sin permiso';
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  SELECCIONAR EVENTO ACTIVO
-// ══════════════════════════════════════════════════
-async function openSettings(){
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'settings';
-  body.innerHTML = `
-    <div style="width:100%;max-width:440px">
-      <div style="font-family:Syne;font-size:20px;font-weight:700;margin-bottom:6px;text-align:center">⚙️ Configuración</div>
-      <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px">Selecciona el evento activo para este kiosco</div>
-      <div id="ev-list"><div style="text-align:center;color:var(--muted);padding:20px">Cargando eventos…</div></div>
-      <button class="btn btn-g" style="margin-top:12px" onclick="showIdle()">← Volver</button>
-    </div>`;
-  
-  try{
-    const{data:evs} = await _sb.from('events')
-      .select('id,nombre,fecha_inicio,estado')
-      .in('estado',['publicado','confirmado','produccion','borrador'])
-      .order('fecha_inicio',{ascending:false})
-      .limit(20);
-    
-    const list = document.getElementById('ev-list');
-    if(!evs || evs.length === 0){
-      list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">No hay eventos disponibles</div>';
-      return;
-    }
-    list.innerHTML = evs.map(ev => {
-      const fecha = (ev.fecha_inicio||'').slice(0,10);
-      const isSelected = activeEvent?.id === ev.id;
-      const safeName = ev.nombre.replace(/"/g,'&quot;');
-      return `<div class="ev-btn ${isSelected?'selected':''}" data-evid="${ev.id}" data-evnombre="${safeName}" onclick="selectEventFromEl(this)">
-        <div class="ev-nombre">${ev.nombre}</div>
-        <div class="ev-meta">📅 ${fecha} · ${ev.estado}</div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    toast('Error cargando eventos','err');
-  }
-}
-
-function selectEvent(id, nombre){
-  activeEvent = {id, nombre};
-  localStorage.setItem('reg_event_id', id);
-  localStorage.setItem('reg_event_name', nombre);
-  toast(`Evento activo: ${nombre}`, 'ok');
-  showIdle();
-}
-
-// Versión que lee data attributes para evitar problemas de escape en onclick
-function selectEventFromEl(el){
-  const id     = el.dataset.evid;
-  const nombre = el.dataset.evnombre;
-  selectEvent(id, nombre);
-}
-
-// ══════════════════════════════════════════════════
-//  PANTALLA IDLE — PASO 0
-// ══════════════════════════════════════════════════
-function showIdle(){
-  currentTicket = null;
-  clearTimeout(idleTimer);
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'idle';
-  
-  const eventBanner = activeEvent
-    ? `<div style="background:rgba(200,255,0,.08);border:1px solid rgba(200,255,0,.2);border-radius:10px;padding:10px 16px;margin-bottom:20px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Evento activo</div>
-        <div style="font-family:Syne;font-size:15px;font-weight:700;color:var(--a1)">${activeEvent.nombre}</div>
-       </div>`
-    : `<div style="background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.2);border-radius:10px;padding:10px 16px;margin-bottom:20px;text-align:center;cursor:pointer" onclick="openSettings()">
-        <div style="font-size:13px;color:var(--danger)">⚠️ Sin evento seleccionado</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">Toca aquí para configurar</div>
-       </div>`;
-
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      ${eventBanner}
-      
-      <!-- Instrucciones visuales -->
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px">
-        <div style="text-align:center;flex:1">
-          <div style="font-size:36px;margin-bottom:4px">🎟️</div>
-          <div style="font-family:Syne;font-weight:700;font-size:13px;color:var(--a3)">PASO 1</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Escanea tu<br>entrada (QR)</div>
-        </div>
-        <div style="color:var(--muted);font-size:22px">→</div>
-        <div style="text-align:center;flex:1">
-          <div style="font-size:36px;margin-bottom:4px">📡</div>
-          <div style="font-family:Syne;font-weight:700;font-size:13px;color:var(--a1)">PASO 2</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Acerca tu<br>pulsera</div>
-        </div>
-        <div style="color:var(--muted);font-size:22px">→</div>
-        <div style="text-align:center;flex:1">
-          <div style="font-size:36px;margin-bottom:4px">✅</div>
-          <div style="font-family:Syne;font-weight:700;font-size:13px;color:var(--success)">LISTO</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Pulsera<br>registrada</div>
-        </div>
-      </div>
-
-      <div class="btn btn-p" style="font-size:18px;padding:18px" onclick="startStep1()">
-        🎟️ Comenzar registro
-      </div>
-      <button class="btn btn-g" style="margin-top:10px;font-size:13px" onclick="skipToWristband()">
-        Solo registrar pulsera (sin QR)
-      </button>
-    </div>`;
-}
-
-// ══════════════════════════════════════════════════
-//  PASO 1 — ESCANEAR QR DE ENTRADA
-// ══════════════════════════════════════════════════
-function startStep1(){
-  if(!activeEvent){ toast('Selecciona un evento primero','warn'); openSettings(); return; }
-  
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'step1';
-  resetIdle();
-  
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div class="steps-bar">
-        <div class="step-dot active"></div>
-        <div class="step-dot"></div>
-        <div class="step-dot"></div>
-      </div>
-      
-      <div style="font-size:13px;color:var(--a3);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">PASO 1 DE 3</div>
-      <div class="k-title">Escanea tu entrada</div>
-      <div class="k-sub">Usa el lector QR o introduce el código de tu entrada</div>
-      
-      <!-- QR scan area visual -->
-      <div class="scan-area active" style="margin:20px auto">
-        <div class="scan-corner tl" style="color:var(--a3)"></div>
-        <div class="scan-corner tr" style="color:var(--a3)"></div>
-        <div class="scan-corner bl" style="color:var(--a3)"></div>
-        <div class="scan-corner br" style="color:var(--a3)"></div>
-        <div class="scan-line"></div>
-        <div style="font-size:11px;color:var(--muted);text-align:center;padding:20px">
-          Apunta la cámara<br>al código QR de tu entrada
-        </div>
-      </div>
-      
-      <!-- Input manual -->
-      <div style="margin-top:16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">O introduce el código manualmente:</div>
-        <input id="ticket-code-input" class="form-input" type="text" 
-          placeholder="Código de entrada" autocomplete="off" autocapitalize="off"
-          style="margin-bottom:0"
-          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')"
-          onkeydown="if(event.key==='Enter')submitTicketCode()"/>
-        <button class="btn btn-p" style="margin-top:10px" onclick="submitTicketCode()">
-          Validar entrada →
-        </button>
-      </div>
-
-      <button class="btn btn-g" style="margin-top:10px;font-size:13px" onclick="showIdle()">← Cancelar</button>
-    </div>`;
-
-  // Auto-focus para lectores USB de QR (actúan como teclado)
-  setTimeout(() => document.getElementById('ticket-code-input')?.focus(), 100);
-  
-  // Listener para lectura automática de QR USB (barcode/QR scanner → teclado → Enter)
-  document.getElementById('ticket-code-input')?.addEventListener('keydown', e => {
-    if(e.key === 'Enter') submitTicketCode();
-  });
-}
-
-async function submitTicketCode(){
-  const raw = document.getElementById('ticket-code-input')?.value?.trim();
-  if(!raw || raw.length < 4){ toast('Introduce un código válido','warn'); return; }
-  
-  const btn = document.querySelector('#k-body .btn-p');
-  if(btn){ btn.disabled = true; btn.textContent = 'Validando…'; }
-  
-  await validateTicket(raw);
-}
-
-// Permite al bridge Android llamar esto directamente con el QR escaneado
-window.onAndroidQRScan = async (qrData) => {
-  await validateTicket(qrData);
-};
-
-async function validateTicket(code){
-  // Limpiar el código — puede ser una URL con el ticket_id como parámetro
-  // Formatos: 
-  //   - Solo el código: "TK-XXXXX" 
-  //   - URL: "https://inout-check.vercel.app/ticket/TK-XXXXX"
-  //   - URL con param: "https://...?ticket=TK-XXXXX"
-  let ticketCode = code;
-  try{
-    const url = new URL(code);
-    // Intentar extraer de pathname o params
-    const pathParts = url.pathname.split('/');
-    const lastPart = pathParts[pathParts.length - 1];
-    if(lastPart && lastPart.length > 4) ticketCode = lastPart;
-    const param = url.searchParams.get('ticket') || url.searchParams.get('id') || url.searchParams.get('code');
-    if(param) ticketCode = param;
-  }catch(e){ /* no es URL, usar el código directo */ }
-
-  try{
-    // Buscar el ticket en Supabase
-    // Los tickets tienen un campo 'ticket_code' o 'id' o un UUID
-    let {data:ticket, error} = await _sb.from('tickets')
-      .select('*, orders(buyer_name, buyer_email, buyer_phone), ticket_types(nombre, tipo_zona)')
-      .or(`ticket_code.eq.${ticketCode},id.eq.${ticketCode}`)
-      .eq('event_id', activeEvent.id)
-      .maybeSingle();
-
-    if(error) throw error;
-
-    if(!ticket){
-      // Intentar buscar por UUID completo si el código es un UUID
-      const {data:ticket2} = await _sb.from('tickets')
-        .select('*, orders(buyer_name, buyer_email, buyer_phone), ticket_types(nombre, tipo_zona)')
-        .eq('id', ticketCode)
-        .maybeSingle();
-      ticket = ticket2;
-    }
-    
-    if(!ticket){
-      showTicketError(`Entrada no encontrada en ${activeEvent.nombre}`);
-      return;
-    }
-
-    if(ticket.status === 'used' || ticket.validated){
-      // Verificar si ya tiene pulsera asignada
-      const {data:reg} = await _sb.from('event_wristband_registrations')
-        .select('*, rfid_wristbands(uid,holder_name)')
-        .eq('ticket_id', ticket.id)
-        .maybeSingle();
-      
-      if(reg){
-        showTicketAlreadyLinked(ticket, reg);
-        return;
-      }
-    }
-
-    currentTicket = ticket;
-    showTicketValid(ticket);
-
-  }catch(e){
-    console.error(e);
-    toast('Error al validar: '+e.message, 'err');
-    const btn = document.querySelector('#k-body .btn-p');
-    if(btn){ btn.disabled = false; btn.textContent = 'Validar entrada →'; }
-  }
-}
-
-function showTicketError(msg){
-  const body = document.getElementById('k-body');
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div style="font-size:64px;margin-bottom:12px">❌</div>
-      <div style="font-family:Syne;font-size:22px;font-weight:700;color:var(--danger);margin-bottom:8px">Entrada no válida</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:24px">${msg}</div>
-      <div class="info-card danger">
-        <div style="font-size:13px;line-height:1.6">Verifica que el código es correcto y que corresponde al evento <strong style="color:var(--txt)">${activeEvent?.nombre}</strong>.</div>
-      </div>
-      <button class="btn btn-p" style="margin-top:16px" onclick="startStep1()">🔄 Intentar de nuevo</button>
-      <button class="btn btn-g" style="margin-top:8px" onclick="showIdle()">← Inicio</button>
-    </div>`;
-  if(navigator.vibrate) navigator.vibrate([100,50,100,50,100]);
-}
-
-function showTicketAlreadyLinked(ticket, reg){
-  const wristband = reg.rfid_wristbands;
-  const body = document.getElementById('k-body');
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div style="font-size:64px;margin-bottom:12px">⚠️</div>
-      <div style="font-family:Syne;font-size:20px;font-weight:700;color:var(--warn);margin-bottom:8px">Entrada ya registrada</div>
-      <div class="info-card warn">
-        <div class="ticket-row"><span class="ticket-lbl">Pulsera</span><span style="font-family:monospace">${wristband?.uid || '—'}</span></div>
-        <div class="ticket-row"><span class="ticket-lbl">Titular</span><span>${wristband?.holder_name || reg.holder_name || '—'}</span></div>
-      </div>
-      <div style="font-size:13px;color:var(--muted);margin:12px 0">Esta entrada ya tiene una pulsera enlazada. ¿Quieres re-enlazarla a una pulsera diferente?</div>
-      <button class="btn btn-p" id="relink-btn" style="margin-bottom:8px">Sí, re-enlazar pulsera</button>
-      <button class="btn btn-g" onclick="showIdle()">No, cancelar</button>
-    </div>`;
-  // Asignar onclick después de renderizar para evitar problemas de escape
-  setTimeout(() => {
-    const btn = document.getElementById('relink-btn');
-    if(btn) btn.onclick = () => { currentTicket = ticket; startStep2(); };
-  }, 50);
-}
-
-function showTicketValid(ticket){
-  const buyer = ticket.orders || {};
-  const tipo  = ticket.ticket_types || {};
-  const body  = document.getElementById('k-body');
-  body.dataset.screen = 'ticket-valid';
-  resetIdle();
-  
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div class="steps-bar">
-        <div class="step-dot done"></div>
-        <div class="step-dot active"></div>
-        <div class="step-dot"></div>
-      </div>
-      
-      <div style="font-size:13px;color:var(--a1);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">PASO 2 DE 3 — Entrada válida ✓</div>
-      
-      <div class="info-card success" style="margin-bottom:16px;text-align:left">
-        <div class="ticket-name">${buyer.buyer_name || tipo.nombre || 'Entrada válida'}</div>
-        <div class="ticket-event">${activeEvent?.nombre}</div>
-        <div class="ticket-row"><span class="ticket-lbl">Tipo</span><span>${tipo.nombre || '—'}</span></div>
-        <div class="ticket-row"><span class="ticket-lbl">Zona</span><span>${tipo.tipo_zona || 'General'}</span></div>
-        ${buyer.buyer_email ? `<div class="ticket-row"><span class="ticket-lbl">Email</span><span style="font-size:12px">${buyer.buyer_email}</span></div>` : ''}
-        ${buyer.buyer_phone ? `<div class="ticket-row"><span class="ticket-lbl">Teléfono</span><span>${buyer.buyer_phone}</span></div>` : ''}
-      </div>
-      
-      <div class="k-title" style="font-size:20px">Ahora acerca la pulsera</div>
-      <div class="k-sub" style="margin-bottom:16px">Enlazaremos esta entrada con tu pulsera NFC</div>
-      
-      <button class="btn btn-p" onclick="startStep2()">
-        📡 Continuar con la pulsera →
-      </button>
-      <button class="btn btn-g" style="margin-top:8px;font-size:13px" onclick="startStep1()">← Volver</button>
-    </div>`;
-}
-
-// ══════════════════════════════════════════════════
-//  PASO 2 — LEER PULSERA NFC
-// ══════════════════════════════════════════════════
-function startStep2(){
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'step2';
-  resetIdle();
-  
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div class="steps-bar">
-        <div class="step-dot done"></div>
-        <div class="step-dot done"></div>
-        <div class="step-dot active"></div>
-      </div>
-      
-      <div style="font-size:13px;color:var(--a3);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">PASO 3 DE 3</div>
-      
-      <div class="nfc-ring scanning" id="nfc-ring">
-        <span class="nfc-emoji">📡</span>
-      </div>
-      
-      <div class="k-title">Acerca tu pulsera</div>
-      <div class="k-sub">Pon la pulsera NFC cerca del lector</div>
-      
-      ${!nfcSupported ? `
-        <div style="margin-top:16px">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">NFC no disponible — introduce el UID manualmente:</div>
-          <input id="uid-input" class="form-input" type="text" 
-            placeholder="UID de la pulsera"
-            oninput="this.value=this.value.replace(/[^a-fA-F0-9]/g,'').toUpperCase()"
-            onkeydown="if(event.key==='Enter')submitWristbandUID()"/>
-          <button class="btn btn-p" style="margin-top:10px" onclick="submitWristbandUID()">Registrar</button>
-        </div>
-      ` : ''}
-      
-      <button class="btn btn-g" style="margin-top:14px;font-size:13px" onclick="currentTicket?showTicketValid(currentTicket):startStep1()">← Atrás</button>
-    </div>`;
-  
-  // Si no hay NFC, auto-focus en el input
-  if(!nfcSupported) setTimeout(() => document.getElementById('uid-input')?.focus(), 100);
-}
-
-// Llamada cuando NFC detecta una pulsera (en paso 2)
-async function onNFCScan(uid){
-  const body = document.getElementById('k-body');
-  if(body.dataset.screen !== 'step2') return; // solo en paso 2
-  
-  if(navigator.vibrate) navigator.vibrate(100);
-  
-  const ring = document.getElementById('nfc-ring');
-  if(ring) ring.className = 'nfc-ring ok';
-  
-  await processWristband(uid);
-}
-
-async function submitWristbandUID(){
-  const uid = document.getElementById('uid-input')?.value?.trim().toUpperCase();
-  if(!uid || uid.length < 4){ toast('UID inválido','warn'); return; }
-  await processWristband(uid);
-}
-
-// ══════════════════════════════════════════════════
-//  PROCESAR PULSERA — CORAZÓN DEL SISTEMA
-// ══════════════════════════════════════════════════
-async function processWristband(uid){
-  const body = document.getElementById('k-body');
-  body.innerHTML = `
-    <div style="text-align:center;padding:40px 0">
-      <div style="font-size:48px;margin-bottom:12px">⏳</div>
-      <div style="font-family:Syne;font-size:18px;font-weight:700;margin-bottom:8px">Procesando…</div>
-      <div style="font-size:13px;color:var(--muted)">Registrando pulsera en el evento</div>
-    </div>`;
-
-  try{
-    // 1. Buscar pulsera existente
-    const {data:existing, error:searchErr} = await _sb.from('rfid_wristbands')
-      .select('*')
-      .eq('uid', uid)
-      .maybeSingle();
-
-    if(searchErr) throw searchErr;
-
-    const buyer       = currentTicket?.orders || {};
-    const holderName  = buyer.buyer_name  || existing?.holder_name  || 'Sin nombre';
-    const holderEmail = buyer.buyer_email || existing?.holder_email || null;
-    const holderPhone = buyer.buyer_phone || existing?.holder_phone || null;
-
-    let wristband = existing;
-
-    if(!wristband){
-      // Pulsera nueva — crear con campos mínimos seguros
-      const insertData = {
-        uid,
-        holder_name: holderName,
-        status:      'active',
-        balance:     0,
-        event_id:    activeEvent.id,
-      };
-      // Añadir email/phone solo si existen (evitar error si la columna no existe)
-      if(holderEmail) insertData.holder_email = holderEmail;
-      if(holderPhone) insertData.holder_phone = holderPhone;
-
-      const {data:newWb, error:wbErr} = await _sb
-        .from('rfid_wristbands')
-        .insert(insertData)
-        .select()
-        .single();
-
-      if(wbErr) throw new Error('Error creando pulsera: ' + wbErr.message);
-      wristband = newWb;
-
-    } else {
-      // Pulsera existente — actualizar event_id y nombre si tenemos datos mejores
-      const updateData = {event_id: activeEvent.id};
-      if(holderName !== 'Sin nombre' && wristband.holder_name !== holderName){
-        updateData.holder_name = holderName;
-      }
-      const {error:updErr} = await _sb.from('rfid_wristbands').update(updateData).eq('id', wristband.id);
-      if(updErr) console.warn('Update wristband:', updErr.message);
-      else wristband.holder_name = holderName;
-    }
-
-    // 2. Registrar en event_wristband_registrations (tabla multi-evento)
-    const {error:regErr} = await _sb.from('event_wristband_registrations').upsert({
-      event_id:      activeEvent.id,
-      wristband_id:  wristband.id,
-      wristband_uid: uid,
-      ticket_id:     currentTicket?.id || null,
-      holder_name:   holderName,
-      registered_at: new Date().toISOString(),
-      registered_by: 'kiosk-register',
-    }, {onConflict: 'event_id,wristband_uid'});
-
-    if(regErr){
-      // Tabla no existe aún — solo loguear, no bloquear
-      console.warn('event_wristband_registrations error:', regErr.message);
-      // El event_id ya está actualizado en rfid_wristbands arriba, así que funciona igualmente
-    }
-
-    // 3. Marcar ticket como usado (no crítico si falla)
-    if(currentTicket?.id){
-      const {error:tErr} = await _sb.from('tickets')
-        .update({status:'used', validated:true, validated_at:new Date().toISOString()})
-        .eq('id', currentTicket.id);
-      if(tErr) console.warn('Update ticket:', tErr.message);
-    }
-
-    // 4. Log de transacción (completamente opcional — silenciar errores)
-    try{
-      await _sb.from('rfid_transactions').insert({
-        wristband_id: wristband.id,
-        event_id:     activeEvent.id,
-        amount:       0,
-        description:  'Registro entrada: ' + activeEvent.nombre,
-        operator:     'kiosk-register',
-      });
-    }catch(_e){ console.warn('Log transaction (no crítico):', _e.message); }
-
-    showSuccess(uid, wristband.holder_name || holderName, wristband);
-
-  }catch(e){
-    console.error('processWristband error:', e);
-    showRegistrationError(uid, e.message || String(e));
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  PANTALLA DE ÉXITO
-// ══════════════════════════════════════════════════
-function showSuccess(uid, holderName, wristband){
-  if(navigator.vibrate) navigator.vibrate([100,60,100]);
-  
-  const overlay = document.createElement('div');
-  overlay.className = 'success-overlay';
-  overlay.innerHTML = `
-    <div class="success-box">
-      <div style="font-size:72px;margin-bottom:12px">✅</div>
-      <div style="font-family:Syne;font-size:26px;font-weight:800;color:var(--success);margin-bottom:6px">¡Registrado!</div>
-      <div style="font-size:16px;color:var(--a1);font-family:Syne;font-weight:700;margin-bottom:16px">${holderName}</div>
-      <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left">
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--muted)">Pulsera</span><span style="font-family:monospace;font-size:12px">${uid}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--muted)">Evento</span><span>${activeEvent?.nombre}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--muted)">Saldo</span><span style="color:var(--a1);font-weight:600">${(wristband.balance||0).toFixed(2)} €</span></div>
-      </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:16px" id="scd">Volviendo al inicio en 4 seg…</div>
-      <button class="btn btn-p" onclick="this.closest('.success-overlay').remove();showIdle()">
-        Siguiente persona →
-      </button>
-    </div>`;
-  document.body.appendChild(overlay);
-  
-  let secs = 4;
-  const ticker = setInterval(() => {
-    secs--;
-    const el = document.getElementById('scd');
-    if(el) el.textContent = `Volviendo al inicio en ${secs} seg…`;
-    if(secs <= 0){ clearInterval(ticker); overlay.remove(); showIdle(); }
-  }, 1000);
-}
-
-function showRegistrationError(uid, errMsg){
-  const body = document.getElementById('k-body');
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div style="font-size:64px;margin-bottom:12px">❌</div>
-      <div style="font-family:Syne;font-size:20px;font-weight:700;color:var(--danger);margin-bottom:8px">Error al registrar</div>
-      <div class="info-card danger" style="text-align:left">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">UID:</div>
-        <div style="font-family:monospace;font-size:14px;margin-bottom:8px">${uid}</div>
-        <div style="font-size:12px;color:var(--muted)">${errMsg}</div>
-      </div>
-      <button class="btn btn-p" style="margin-top:16px" onclick="startStep2()">🔄 Reintentar</button>
-      <button class="btn btn-g" style="margin-top:8px" onclick="showIdle()">← Inicio</button>
-    </div>`;
-}
-
-// ══════════════════════════════════════════════════
-//  MODO DIRECTO — Solo registrar pulsera sin QR
-//  (para discotecas donde no hay ticket previo)
-// ══════════════════════════════════════════════════
-function skipToWristband(){
-  if(!activeEvent){ toast('Selecciona un evento primero','warn'); openSettings(); return; }
-  // Pedir PIN de admin antes de permitir el registro sin QR
-  openPIN(() => {
-    currentTicket = null;
-  
-  const body = document.getElementById('k-body');
-  body.dataset.screen = 'direct';
-  resetIdle();
-  
-  body.innerHTML = `
-    <div style="width:100%;max-width:400px;text-align:center">
-      <div style="font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">REGISTRO DIRECTO</div>
-      
-      <div class="nfc-ring scanning" id="nfc-ring-d">
-        <span class="nfc-emoji">📡</span>
-      </div>
-      
-      <div class="k-title">Acerca tu pulsera</div>
-      <div class="k-sub">La pulsera se enlazará directamente al evento <strong style="color:var(--a1)">${activeEvent.nombre}</strong></div>
-      
-      ${!nfcSupported ? `
-        <div style="margin-top:16px">
-          <input id="uid-direct" class="form-input" type="text" 
-            placeholder="UID de la pulsera"
-            oninput="this.value=this.value.replace(/[^a-fA-F0-9]/g,'').toUpperCase()"
-            onkeydown="if(event.key==='Enter')submitDirectUID()"/>
-          <button class="btn btn-p" style="margin-top:10px" onclick="submitDirectUID()">Registrar</button>
-        </div>
-      ` : ''}
-      
-      <button class="btn btn-g" style="margin-top:14px;font-size:13px" onclick="showIdle()">← Cancelar</button>
-    </div>`;
-  
-  // Cambiar handler NFC a modo directo
-  body.dataset.nfcMode = 'direct';
-  if(!nfcSupported) setTimeout(() => document.getElementById('uid-direct')?.focus(), 100);
-  }); // fin openPIN callback
-}
-
-// Override onNFCScan para modo directo
-const _originalOnNFCScan = onNFCScan;
-window.onNFCScan = async function(uid){
-  const body = document.getElementById('k-body');
-  if(body.dataset.screen === 'direct' || body.dataset.screen === 'step2'){
-    if(navigator.vibrate) navigator.vibrate(100);
-    const ring = document.getElementById('nfc-ring') || document.getElementById('nfc-ring-d');
-    if(ring) ring.className = 'nfc-ring ok';
-    await processWristband(uid);
-  }
-};
-// Reasignar el handler de NFC reader
-if(nfcReader) nfcReader.onreading = ev => window.onNFCScan(ev.serialNumber.replace(/:/g,'').toUpperCase());
-if(window.ANDROID_KIOSK) window.onAndroidNFCScan = uid => { if(uid && uid.length >= 4) window.onNFCScan(uid.toUpperCase()); };
-
-async function submitDirectUID(){
-  const uid = document.getElementById('uid-direct')?.value?.trim().toUpperCase();
-  if(!uid || uid.length < 4){ toast('UID inválido','warn'); return; }
-  await processWristband(uid);
-}
-
-// ══════════════════════════════════════════════════
-//  SQL MIGRATION HELPER — crea tabla si no existe
-// ══════════════════════════════════════════════════
-async function ensureRegistrationsTable(){
-  // Intentar hacer un select para ver si la tabla existe
-  const {error} = await _sb.from('event_wristband_registrations').select('id').limit(1);
-  if(error && error.code === '42P01'){
-    console.warn('La tabla event_wristband_registrations no existe. Ejecuta el SQL del README.');
-    toast('⚠️ Falta tabla en BD. Ver consola.','warn',6000);
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════
-(async function init(){
-  showDeviceLockScreen('Registro de Pulseras','📝', async()=>{
-    startClock();
-    await initNFC();
-    await ensureRegistrationsTable();
-    document.addEventListener('touchstart', resetIdle, {passive:true});
-    document.addEventListener('click', resetIdle);
-    showIdle();
-  });
-})();
-</script>
 </body>
 </html>
